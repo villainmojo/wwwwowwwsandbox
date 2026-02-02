@@ -66,12 +66,6 @@ html,body{
 .prose img{max-width:100%; border-radius:14px; border:1px solid rgba(15,23,42,.10)}
 
 /* post utilities */
-.toc{margin:10px 0 16px; border:1px dashed rgba(15,23,42,.18); padding:12px; border-radius:12px; background:rgba(255,255,255,.65);}
-.toc .toc-title{font-size:12px; color:var(--muted); margin:0 0 8px; font-weight:700;}
-.toc ul{margin:0; padding-left:18px; color:var(--muted)}
-.toc a{color:var(--muted); text-decoration:none;}
-.toc a:hover{color:var(--accent); text-decoration:underline;}
-
 .post-nav{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; padding-top:14px; border-top:1px solid var(--border);}
 .post-nav a{display:inline-flex; gap:8px; align-items:center; border:1px solid var(--border); background:rgba(255,255,255,.85); padding:10px 12px; border-radius:12px; text-decoration:none; color:var(--text); font-size:13px;}
 .post-nav a:hover{border-color:rgba(124,58,237,.28)}

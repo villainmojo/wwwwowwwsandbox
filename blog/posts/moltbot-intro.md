@@ -6,8 +6,6 @@ excerpt: 메신저로 대화하는 AI를 ‘내 서버/VPS’에서 운영하면
 thumbnail: https://commons.wikimedia.org/wiki/Special:FilePath/RobotMX5.jpg
 ---
 
-> 이 글은 개인 계정/토큰/서버 주소 등 **민감한 정보(개인정보·비밀키)**를 포함하지 않습니다. 예시는 전부 가상 값입니다.
-
 ## 0) Moltbot을 한 문장으로
 **Moltbot은 “대화형 자동화 허브”**라고 보면 이해가 빠릅니다.
 
