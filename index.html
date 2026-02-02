@@ -239,6 +239,13 @@
             margin-bottom: 8px;
             transition: color 0.3s ease, text-shadow 0.3s ease;
         }
+
+        /* keep titles on one line for clean cards */
+        .app-card .app-name{
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         
         .app-card:hover .app-name {
             color: #fff;
@@ -330,7 +337,7 @@
             <button class="nav-btn" data-page="board">게시판</button>
             <button class="nav-btn" data-page="news">건설뉴스</button>
             <button class="nav-btn" data-page="lck">LCK</button>
-            <a class="nav-btn" href="/blog/" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, rgba(124,58,237,0.9), rgba(251,113,133,0.9)); color:#fff; border: none; font-weight: 800;">📝 자유 실험실 블로그</a>
+            <a class="nav-btn" href="/blog/" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, rgba(124,58,237,0.9), rgba(251,113,133,0.9)); color:#fff; border: none; font-weight: 800;">📝 자유실험실 블로그</a>
             <a href="v2.html" class="nav-btn" style="background: linear-gradient(135deg, #6366f1, #ec4899); color: #fff; border: none; text-decoration: none; font-weight: bold;">✨ V2</a>
         </div>
     </nav>
@@ -339,7 +346,7 @@
         <div id="home-page" class="home-page">
             <h1 class="hero-title">Seungil Playground</h1>
             <p class="hero-subtitle">Web Apps & Games</p>
-            <a href="/blog/" class="v2-btn" style="background: linear-gradient(135deg, #22c55e, #f59e0b); box-shadow: 0 4px 20px rgba(245, 158, 11, 0.25);">📝 자유 실험실 블로그 열기</a>
+            <a href="/blog/" class="v2-btn" style="background: linear-gradient(135deg, #22c55e, #f59e0b); box-shadow: 0 4px 20px rgba(245, 158, 11, 0.25);">📝 자유실험실 블로그 열기</a>
             <a href="v2.html" class="v2-btn">✨ V2 홈 체험하기</a>
             
             <div class="app-grid">
@@ -347,7 +354,7 @@
                     <div class="app-card-glow" style="opacity:0.6; filter: blur(10px);"></div>
                     <div class="app-card-inner">
                         <div class="app-icon">📝</div>
-                        <div class="app-name">자유 실험실 블로그</div>
+                        <div class="app-name">자유실험실 블로그</div>
                         <div class="app-desc">부업·AI·봇·자동화·취미</div>
                     </div>
                 </div>
