@@ -4,8 +4,279 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 - SENGVIS Playground</title>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+    <script src="https://accounts.google.com/gsi/client" async defer>
+
+        // ===== BLOG ADMIN =====
+        let blogEditor = null;
+
+        function ensureBlogEditor(){
+            if(blogEditor) return blogEditor;
+            if(!window.toastui || !toastui.Editor) throw new Error('Editor library not loaded');
+            blogEditor = new toastui.Editor({
+                el: document.querySelector('#blogEditor'),
+                height: '520px',
+                initialEditType: 'wysiwyg',
+                previewStyle: 'vertical',
+                usageStatistics: false,
+                toolbarItems: [
+                    ['heading', 'bold', 'italic', 'strike'],
+                    ['hr', 'quote'],
+                    ['ul', 'ol', 'task'],
+                    ['table', 'image', 'link'],
+                    ['code', 'codeblock'],
+                    ['scrollSync']
+                ],
+                hooks: {
+                    addImageBlobHook: async (blob, callback) => {
+                        try{
+                            const token = localStorage.getItem('adminToken');
+                            if(!token) throw new Error('관리자 로그인 필요');
+                            const dataUrl = await new Promise((resolve, reject)=>{
+                                const r = new FileReader();
+                                r.onload = ()=>resolve(String(r.result));
+                                r.onerror = ()=>reject(new Error('read failed'));
+                                r.readAsDataURL(blob);
+                            });
+                            const ext = (blob.type.split('/')[1] || 'png').replace('jpeg','jpg');
+                            const filename = `img_${Date.now()}.${ext}`;
+                            const res = await fetch('/api/admin/blog/upload', {
+                                method:'POST',
+                                headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({ filename, dataUrl })
+                            });
+                            const out = await res.json();
+                            if(!out.success) throw new Error(out.error||'upload failed');
+                            callback(out.url, filename);
+                        }catch(e){
+                            alert('이미지 업로드 실패: ' + e.message);
+                        }
+                        return false;
+                    }
+                }
+            });
+            return blogEditor;
+        }
+
+        async function apiAdmin(path, opts={}){
+            if(!authToken) throw new Error('not logged in');
+            const res = await fetch(path, {
+                ...opts,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                    ...(opts.headers||{})
+                }
+            });
+            const data = await res.json().catch(()=>({}));
+            if(!res.ok || data.success === false) throw new Error(data.error || ('HTTP '+res.status));
+            return data;
+        }
+
+        function setBlogStatus(msg){
+            const el = document.getElementById('blogStatus');
+            if(el) el.textContent = msg || '';
+        }
+
+        function editorSetMarkdown(md){
+            document.getElementById('blogMd').value = md || '';
+            try{ ensureBlogEditor().setMarkdown(md || ''); }catch(e){ /* ignore */ }
+        }
+
+        function editorGetMarkdown(){
+            try{ return ensureBlogEditor().getMarkdown(); }
+            catch(e){ return document.getElementById('blogMd').value || ''; }
+        }
+
+        async function loadBlogPosts(){
+            setBlogStatus('불러오는 중…');
+            const data = await apiAdmin('/api/admin/blog/posts');
+            const list = document.getElementById('blogList');
+            list.innerHTML='';
+            (data.posts||[]).forEach(p=>{
+                const a=document.createElement('button');
+                a.className='tab';
+                a.style.textAlign='left';
+                a.style.width='100%';
+                a.style.background='rgba(255,255,255,0.06)';
+                a.style.border='1px solid rgba(255,255,255,0.10)';
+                a.style.borderRadius='10px';
+                a.style.padding='10px 12px';
+                a.innerHTML = `<div style="font-weight:700">${p.title||p.slug}</div><div style="font-size:12px;opacity:.7">${p.slug} · ${p.date||''}</div>`;
+                a.onclick=()=>openBlogPost(p.slug);
+                list.appendChild(a);
+            });
+            setBlogStatus(`${(data.posts||[]).length}개`);
+        }
+
+        async function openBlogPost(slug){
+            setBlogStatus('불러오는 중…');
+            const data = await apiAdmin('/api/admin/blog/post?slug='+encodeURIComponent(slug));
+            document.getElementById('blogSlug').value = data.slug;
+            editorSetMarkdown(data.md);
+            setBlogStatus('로드 완료');
+        }
+
+        function newBlogPost(){
+            document.getElementById('blogSlug').value = '';
+            editorSetMarkdown(`---\ntitle: 새 글\ndate: ${(new Date()).toISOString().slice(0,10)}\ntags: []\n---\n\n`);
+            setBlogStatus('새 글');
+        }
+
+        async function saveBlogPost(){
+            const slug = (document.getElementById('blogSlug').value||'').trim();
+            const md = editorGetMarkdown() || '';
+            document.getElementById('blogMd').value = md;
+            setBlogStatus('저장 중…');
+            await apiAdmin('/api/admin/blog/post', {method:'POST', body: JSON.stringify({slug, md})});
+            setBlogStatus('저장 완료 (발행 필요)');
+            await loadBlogPosts();
+        }
+
+        async function publishBlog(){
+            if(!confirm('발행하면 사이트(/blog)에 반영됩니다. 진행할까요?')) return;
+            setBlogStatus('발행 중… (최대 20초)');
+            await apiAdmin('/api/admin/blog/publish', {method:'POST', body: JSON.stringify({})});
+            setBlogStatus('발행 완료');
+        }
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js">
+
+        // ===== BLOG ADMIN =====
+        let blogEditor = null;
+
+        function ensureBlogEditor(){
+            if(blogEditor) return blogEditor;
+            if(!window.toastui || !toastui.Editor) throw new Error('Editor library not loaded');
+            blogEditor = new toastui.Editor({
+                el: document.querySelector('#blogEditor'),
+                height: '520px',
+                initialEditType: 'wysiwyg',
+                previewStyle: 'vertical',
+                usageStatistics: false,
+                toolbarItems: [
+                    ['heading', 'bold', 'italic', 'strike'],
+                    ['hr', 'quote'],
+                    ['ul', 'ol', 'task'],
+                    ['table', 'image', 'link'],
+                    ['code', 'codeblock'],
+                    ['scrollSync']
+                ],
+                hooks: {
+                    addImageBlobHook: async (blob, callback) => {
+                        try{
+                            const token = localStorage.getItem('adminToken');
+                            if(!token) throw new Error('관리자 로그인 필요');
+                            const dataUrl = await new Promise((resolve, reject)=>{
+                                const r = new FileReader();
+                                r.onload = ()=>resolve(String(r.result));
+                                r.onerror = ()=>reject(new Error('read failed'));
+                                r.readAsDataURL(blob);
+                            });
+                            const ext = (blob.type.split('/')[1] || 'png').replace('jpeg','jpg');
+                            const filename = `img_${Date.now()}.${ext}`;
+                            const res = await fetch('/api/admin/blog/upload', {
+                                method:'POST',
+                                headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({ filename, dataUrl })
+                            });
+                            const out = await res.json();
+                            if(!out.success) throw new Error(out.error||'upload failed');
+                            callback(out.url, filename);
+                        }catch(e){
+                            alert('이미지 업로드 실패: ' + e.message);
+                        }
+                        return false;
+                    }
+                }
+            });
+            return blogEditor;
+        }
+
+        async function apiAdmin(path, opts={}){
+            if(!authToken) throw new Error('not logged in');
+            const res = await fetch(path, {
+                ...opts,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                    ...(opts.headers||{})
+                }
+            });
+            const data = await res.json().catch(()=>({}));
+            if(!res.ok || data.success === false) throw new Error(data.error || ('HTTP '+res.status));
+            return data;
+        }
+
+        function setBlogStatus(msg){
+            const el = document.getElementById('blogStatus');
+            if(el) el.textContent = msg || '';
+        }
+
+        function editorSetMarkdown(md){
+            document.getElementById('blogMd').value = md || '';
+            try{ ensureBlogEditor().setMarkdown(md || ''); }catch(e){ /* ignore */ }
+        }
+
+        function editorGetMarkdown(){
+            try{ return ensureBlogEditor().getMarkdown(); }
+            catch(e){ return document.getElementById('blogMd').value || ''; }
+        }
+
+        async function loadBlogPosts(){
+            setBlogStatus('불러오는 중…');
+            const data = await apiAdmin('/api/admin/blog/posts');
+            const list = document.getElementById('blogList');
+            list.innerHTML='';
+            (data.posts||[]).forEach(p=>{
+                const a=document.createElement('button');
+                a.className='tab';
+                a.style.textAlign='left';
+                a.style.width='100%';
+                a.style.background='rgba(255,255,255,0.06)';
+                a.style.border='1px solid rgba(255,255,255,0.10)';
+                a.style.borderRadius='10px';
+                a.style.padding='10px 12px';
+                a.innerHTML = `<div style="font-weight:700">${p.title||p.slug}</div><div style="font-size:12px;opacity:.7">${p.slug} · ${p.date||''}</div>`;
+                a.onclick=()=>openBlogPost(p.slug);
+                list.appendChild(a);
+            });
+            setBlogStatus(`${(data.posts||[]).length}개`);
+        }
+
+        async function openBlogPost(slug){
+            setBlogStatus('불러오는 중…');
+            const data = await apiAdmin('/api/admin/blog/post?slug='+encodeURIComponent(slug));
+            document.getElementById('blogSlug').value = data.slug;
+            editorSetMarkdown(data.md);
+            setBlogStatus('로드 완료');
+        }
+
+        function newBlogPost(){
+            document.getElementById('blogSlug').value = '';
+            editorSetMarkdown(`---\ntitle: 새 글\ndate: ${(new Date()).toISOString().slice(0,10)}\ntags: []\n---\n\n`);
+            setBlogStatus('새 글');
+        }
+
+        async function saveBlogPost(){
+            const slug = (document.getElementById('blogSlug').value||'').trim();
+            const md = editorGetMarkdown() || '';
+            document.getElementById('blogMd').value = md;
+            setBlogStatus('저장 중…');
+            await apiAdmin('/api/admin/blog/post', {method:'POST', body: JSON.stringify({slug, md})});
+            setBlogStatus('저장 완료 (발행 필요)');
+            await loadBlogPosts();
+        }
+
+        async function publishBlog(){
+            if(!confirm('발행하면 사이트(/blog)에 반영됩니다. 진행할까요?')) return;
+            setBlogStatus('발행 중… (최대 20초)');
+            await apiAdmin('/api/admin/blog/publish', {method:'POST', body: JSON.stringify({})});
+            setBlogStatus('발행 완료');
+        }
+
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -91,6 +362,142 @@
         
         .refresh-btn { margin-bottom: 15px; }
     </style>
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js">
+
+        // ===== BLOG ADMIN =====
+        let blogEditor = null;
+
+        function ensureBlogEditor(){
+            if(blogEditor) return blogEditor;
+            if(!window.toastui || !toastui.Editor) throw new Error('Editor library not loaded');
+            blogEditor = new toastui.Editor({
+                el: document.querySelector('#blogEditor'),
+                height: '520px',
+                initialEditType: 'wysiwyg',
+                previewStyle: 'vertical',
+                usageStatistics: false,
+                toolbarItems: [
+                    ['heading', 'bold', 'italic', 'strike'],
+                    ['hr', 'quote'],
+                    ['ul', 'ol', 'task'],
+                    ['table', 'image', 'link'],
+                    ['code', 'codeblock'],
+                    ['scrollSync']
+                ],
+                hooks: {
+                    addImageBlobHook: async (blob, callback) => {
+                        try{
+                            const token = localStorage.getItem('adminToken');
+                            if(!token) throw new Error('관리자 로그인 필요');
+                            const dataUrl = await new Promise((resolve, reject)=>{
+                                const r = new FileReader();
+                                r.onload = ()=>resolve(String(r.result));
+                                r.onerror = ()=>reject(new Error('read failed'));
+                                r.readAsDataURL(blob);
+                            });
+                            const ext = (blob.type.split('/')[1] || 'png').replace('jpeg','jpg');
+                            const filename = `img_${Date.now()}.${ext}`;
+                            const res = await fetch('/api/admin/blog/upload', {
+                                method:'POST',
+                                headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({ filename, dataUrl })
+                            });
+                            const out = await res.json();
+                            if(!out.success) throw new Error(out.error||'upload failed');
+                            callback(out.url, filename);
+                        }catch(e){
+                            alert('이미지 업로드 실패: ' + e.message);
+                        }
+                        return false;
+                    }
+                }
+            });
+            return blogEditor;
+        }
+
+        async function apiAdmin(path, opts={}){
+            if(!authToken) throw new Error('not logged in');
+            const res = await fetch(path, {
+                ...opts,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                    ...(opts.headers||{})
+                }
+            });
+            const data = await res.json().catch(()=>({}));
+            if(!res.ok || data.success === false) throw new Error(data.error || ('HTTP '+res.status));
+            return data;
+        }
+
+        function setBlogStatus(msg){
+            const el = document.getElementById('blogStatus');
+            if(el) el.textContent = msg || '';
+        }
+
+        function editorSetMarkdown(md){
+            document.getElementById('blogMd').value = md || '';
+            try{ ensureBlogEditor().setMarkdown(md || ''); }catch(e){ /* ignore */ }
+        }
+
+        function editorGetMarkdown(){
+            try{ return ensureBlogEditor().getMarkdown(); }
+            catch(e){ return document.getElementById('blogMd').value || ''; }
+        }
+
+        async function loadBlogPosts(){
+            setBlogStatus('불러오는 중…');
+            const data = await apiAdmin('/api/admin/blog/posts');
+            const list = document.getElementById('blogList');
+            list.innerHTML='';
+            (data.posts||[]).forEach(p=>{
+                const a=document.createElement('button');
+                a.className='tab';
+                a.style.textAlign='left';
+                a.style.width='100%';
+                a.style.background='rgba(255,255,255,0.06)';
+                a.style.border='1px solid rgba(255,255,255,0.10)';
+                a.style.borderRadius='10px';
+                a.style.padding='10px 12px';
+                a.innerHTML = `<div style="font-weight:700">${p.title||p.slug}</div><div style="font-size:12px;opacity:.7">${p.slug} · ${p.date||''}</div>`;
+                a.onclick=()=>openBlogPost(p.slug);
+                list.appendChild(a);
+            });
+            setBlogStatus(`${(data.posts||[]).length}개`);
+        }
+
+        async function openBlogPost(slug){
+            setBlogStatus('불러오는 중…');
+            const data = await apiAdmin('/api/admin/blog/post?slug='+encodeURIComponent(slug));
+            document.getElementById('blogSlug').value = data.slug;
+            editorSetMarkdown(data.md);
+            setBlogStatus('로드 완료');
+        }
+
+        function newBlogPost(){
+            document.getElementById('blogSlug').value = '';
+            editorSetMarkdown(`---\ntitle: 새 글\ndate: ${(new Date()).toISOString().slice(0,10)}\ntags: []\n---\n\n`);
+            setBlogStatus('새 글');
+        }
+
+        async function saveBlogPost(){
+            const slug = (document.getElementById('blogSlug').value||'').trim();
+            const md = editorGetMarkdown() || '';
+            document.getElementById('blogMd').value = md;
+            setBlogStatus('저장 중…');
+            await apiAdmin('/api/admin/blog/post', {method:'POST', body: JSON.stringify({slug, md})});
+            setBlogStatus('저장 완료 (발행 필요)');
+            await loadBlogPosts();
+        }
+
+        async function publishBlog(){
+            if(!confirm('발행하면 사이트(/blog)에 반영됩니다. 진행할까요?')) return;
+            setBlogStatus('발행 중… (최대 20초)');
+            await apiAdmin('/api/admin/blog/publish', {method:'POST', body: JSON.stringify({})});
+            setBlogStatus('발행 완료');
+        }
+
+    </script>
 </head>
 <body>
     <!-- 로그인 화면 -->
@@ -132,6 +539,7 @@
             <button class="tab" data-panel="logs">📋 접속 로그</button>
             <button class="tab" data-panel="posts">📝 게시판 관리</button>
             <button class="tab" data-panel="reviews">🚽 대똥여지도 후기</button>
+            <button class="tab" data-panel="blog">📰 블로그 관리</button>
         </div>
 
         <!-- 대시보드 -->
@@ -206,6 +614,40 @@
                 </thead>
                 <tbody id="postsList"></tbody>
             </table>
+        </div>
+
+
+
+        <!-- 블로그 관리 -->
+        <div class="panel" id="blog">
+            <h2>블로그 글 관리</h2>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+                <button class="btn btn-primary" onclick="loadBlogPosts()">🔄 목록 새로고침</button>
+                <button class="btn btn-primary" onclick="newBlogPost()">➕ 새 글</button>
+                <button class="btn btn-primary" onclick="saveBlogPost()">💾 저장</button>
+                <button class="btn btn-primary" onclick="publishBlog()">🚀 발행(사이트 반영)</button>
+                <span id="blogStatus" style="opacity:.8"></span>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:14px; align-items:start;">
+                <div style="background: rgba(255,255,255,0.03); border-radius:12px; padding:12px;">
+                    <div style="font-size:12px; opacity:.8; margin-bottom:8px;">글 목록</div>
+                    <div id="blogList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.03); border-radius:12px; padding:12px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+                        <label style="font-size:12px; opacity:.8">slug</label>
+                        <input id="blogSlug" placeholder="예: moltbot-intro" style="flex:1; min-width:220px; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.25); color:#fff;" />
+                        <span style="font-size:12px; opacity:.6">(영문/숫자/하이픈)</span>
+                    </div>
+                    <div id="blogEditor" style="background:#fff; border-radius:12px; overflow:hidden;"></div>
+                    <textarea id="blogMd" style="display:none"></textarea>
+                    <div style="font-size:12px; opacity:.7; margin-top:8px; line-height:1.5">
+                        저장은 파일만 바꾸고, <b>발행</b>을 눌러야 사이트(/blog)에 반영됩니다.
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 대똥여지도 후기 -->
@@ -291,6 +733,7 @@
                 else if (panel === 'logs') loadLogs();
                 else if (panel === 'posts') loadPosts();
                 else if (panel === 'reviews') loadReviews();
+                else if (panel === 'blog') { try{ ensureBlogEditor(); }catch(e){} loadBlogPosts(); }
                 else if (panel === 'blog') loadBlogPosts();
             });
         });
@@ -450,6 +893,141 @@
             div.textContent = text;
             return div.innerHTML;
         }
+    
+
+        // ===== BLOG ADMIN =====
+        let blogEditor = null;
+
+        function ensureBlogEditor(){
+            if(blogEditor) return blogEditor;
+            if(!window.toastui || !toastui.Editor) throw new Error('Editor library not loaded');
+            blogEditor = new toastui.Editor({
+                el: document.querySelector('#blogEditor'),
+                height: '520px',
+                initialEditType: 'wysiwyg',
+                previewStyle: 'vertical',
+                usageStatistics: false,
+                toolbarItems: [
+                    ['heading', 'bold', 'italic', 'strike'],
+                    ['hr', 'quote'],
+                    ['ul', 'ol', 'task'],
+                    ['table', 'image', 'link'],
+                    ['code', 'codeblock'],
+                    ['scrollSync']
+                ],
+                hooks: {
+                    addImageBlobHook: async (blob, callback) => {
+                        try{
+                            const token = localStorage.getItem('adminToken');
+                            if(!token) throw new Error('관리자 로그인 필요');
+                            const dataUrl = await new Promise((resolve, reject)=>{
+                                const r = new FileReader();
+                                r.onload = ()=>resolve(String(r.result));
+                                r.onerror = ()=>reject(new Error('read failed'));
+                                r.readAsDataURL(blob);
+                            });
+                            const ext = (blob.type.split('/')[1] || 'png').replace('jpeg','jpg');
+                            const filename = `img_${Date.now()}.${ext}`;
+                            const res = await fetch('/api/admin/blog/upload', {
+                                method:'POST',
+                                headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({ filename, dataUrl })
+                            });
+                            const out = await res.json();
+                            if(!out.success) throw new Error(out.error||'upload failed');
+                            callback(out.url, filename);
+                        }catch(e){
+                            alert('이미지 업로드 실패: ' + e.message);
+                        }
+                        return false;
+                    }
+                }
+            });
+            return blogEditor;
+        }
+
+        async function apiAdmin(path, opts={}){
+            if(!authToken) throw new Error('not logged in');
+            const res = await fetch(path, {
+                ...opts,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                    ...(opts.headers||{})
+                }
+            });
+            const data = await res.json().catch(()=>({}));
+            if(!res.ok || data.success === false) throw new Error(data.error || ('HTTP '+res.status));
+            return data;
+        }
+
+        function setBlogStatus(msg){
+            const el = document.getElementById('blogStatus');
+            if(el) el.textContent = msg || '';
+        }
+
+        function editorSetMarkdown(md){
+            document.getElementById('blogMd').value = md || '';
+            try{ ensureBlogEditor().setMarkdown(md || ''); }catch(e){ /* ignore */ }
+        }
+
+        function editorGetMarkdown(){
+            try{ return ensureBlogEditor().getMarkdown(); }
+            catch(e){ return document.getElementById('blogMd').value || ''; }
+        }
+
+        async function loadBlogPosts(){
+            setBlogStatus('불러오는 중…');
+            const data = await apiAdmin('/api/admin/blog/posts');
+            const list = document.getElementById('blogList');
+            list.innerHTML='';
+            (data.posts||[]).forEach(p=>{
+                const a=document.createElement('button');
+                a.className='tab';
+                a.style.textAlign='left';
+                a.style.width='100%';
+                a.style.background='rgba(255,255,255,0.06)';
+                a.style.border='1px solid rgba(255,255,255,0.10)';
+                a.style.borderRadius='10px';
+                a.style.padding='10px 12px';
+                a.innerHTML = `<div style="font-weight:700">${p.title||p.slug}</div><div style="font-size:12px;opacity:.7">${p.slug} · ${p.date||''}</div>`;
+                a.onclick=()=>openBlogPost(p.slug);
+                list.appendChild(a);
+            });
+            setBlogStatus(`${(data.posts||[]).length}개`);
+        }
+
+        async function openBlogPost(slug){
+            setBlogStatus('불러오는 중…');
+            const data = await apiAdmin('/api/admin/blog/post?slug='+encodeURIComponent(slug));
+            document.getElementById('blogSlug').value = data.slug;
+            editorSetMarkdown(data.md);
+            setBlogStatus('로드 완료');
+        }
+
+        function newBlogPost(){
+            document.getElementById('blogSlug').value = '';
+            editorSetMarkdown(`---\ntitle: 새 글\ndate: ${(new Date()).toISOString().slice(0,10)}\ntags: []\n---\n\n`);
+            setBlogStatus('새 글');
+        }
+
+        async function saveBlogPost(){
+            const slug = (document.getElementById('blogSlug').value||'').trim();
+            const md = editorGetMarkdown() || '';
+            document.getElementById('blogMd').value = md;
+            setBlogStatus('저장 중…');
+            await apiAdmin('/api/admin/blog/post', {method:'POST', body: JSON.stringify({slug, md})});
+            setBlogStatus('저장 완료 (발행 필요)');
+            await loadBlogPosts();
+        }
+
+        async function publishBlog(){
+            if(!confirm('발행하면 사이트(/blog)에 반영됩니다. 진행할까요?')) return;
+            setBlogStatus('발행 중… (최대 20초)');
+            await apiAdmin('/api/admin/blog/publish', {method:'POST', body: JSON.stringify({})});
+            setBlogStatus('발행 완료');
+        }
+
     </script>
 </body>
 </html>
