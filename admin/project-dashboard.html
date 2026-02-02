@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENGVIS Admin Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        :root {
+            --bg: #03030a;
+            --card: rgba(12, 13, 32, 0.9);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent: #8b5cf6;
+            --accent-soft: rgba(139, 92, 246, 0.3);
+            --text: #e0e6ed;
+            --muted: #8a94a6;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top, rgba(59,130,246,0.2), transparent 45%),
+                        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.25), transparent 30%),
+                        #01010d;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: var(--text);
+        }
+        main {
+            padding: 48px 5vw 80px;
+            width: min(1200px, 100%);
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: clamp(2rem, 3vw, 2.6rem);
+            margin-bottom: 8px;
+        }
+        .subheading {
+            color: var(--muted);
+            margin-bottom: 32px;
+        }
+        .muted {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+        .hero-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 30px 45px rgba(0,0,0,0.45);
+            backdrop-filter: blur(20px);
+        }
+        .card h3 {
+            margin: 0;
+            font-size: 0.95rem;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+        .stat-value {
+            font-size: 2.2rem;
+            margin-top: 12px;
+            font-weight: 600;
+        }
+        .timeline {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        .timeline-card {
+            min-width: 220px;
+            flex: 0 0 auto;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+            padding: 16px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .section-title h2 {
+            margin: 0;
+            font-size: 1.4rem;
+        }
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .decision-card {
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 16px;
+            background: radial-gradient(circle at top right, rgba(139,92,246,0.2), transparent 65%);
+        }
+        .decision-card span {
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+        .issues-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .issues-table th,
+        .issues-table td {
+            padding: 12px 10px;
+            text-align: left;
+        }
+        .issues-table th {
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .issues-table tr {
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .status-pill {
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+        }
+        .status-open { background: rgba(255,99,132,0.15); color: #ff6384; }
+        .status-progress { background: rgba(255,197,0,0.15); color: #ffd166; }
+        .status-resolved { background: rgba(0,255,138,0.15); color: #4ef58a; }
+        .weekly-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        canvas {
+            width: 100%;
+            height: 200px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .history-item {
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.02);
+        }
+        .history-time {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>SENGVIS Admin Dashboard</h1>
+            <p class="subheading">어드민 전용 뷰: 프로젝트 타임라인, 결정 로그, 이슈 상태, 주간 요약 등 핵심 정보를 한눈에.</p>
+        </header>
+
+        <section class="grid hero-grid" aria-label="핵심 지표">
+            <article class="card">
+                <h3>진행 중 프로젝트</h3>
+                <div class="stat-value" id="projectCount">-</div>
+                <p class="muted">업데이트: <span id="latestUpdate">-</span></p>
+            </article>
+            <article class="card">
+                <h3>새 이슈</h3>
+                <div class="stat-value" id="newIssues">-</div>
+                <p class="muted">지난 7일 기준</p>
+            </article>
+            <article class="card">
+                <h3>결정된 사안</h3>
+                <div class="stat-value" id="decisionCount">-</div>
+                <p class="muted">최근 7일</p>
+            </article>
+        </section>
+
+        <section class="card" aria-label="프로젝트 타임라인">
+            <div class="section-title">
+                <div>
+                    <h2>프로젝트 타임라인</h2>
+                    <p class="subheading">마일스톤 기반 상태보고</p>
+                </div>
+                <span class="badge">자동 업데이트</span>
+            </div>
+            <div class="timeline" id="timeline"></div>
+        </section>
+
+        <section class="grid" style="grid-template-columns: minmax(0, 1fr);">
+            <div class="card">
+                <div class="section-title">
+                    <h2>결정 & 로그</h2>
+                    <span class="badge">최근 변경</span>
+                </div>
+                <div class="list" id="decisionList"></div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="section-title">
+                <div>
+                    <h2>이슈 히스토리</h2>
+                    <p class="subheading">우선순위 + 상태 기반</p>
+                </div>
+                <span class="badge">항상 최신</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="issues-table">
+                    <thead>
+                        <tr>
+                            <th>이슈</th>
+                            <th>상태</th>
+                            <th>중요도</th>
+                            <th>담당</th>
+                        </tr>
+                    </thead>
+                    <tbody id="issuesTable"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card weekly-panel">
+            <div>
+                <div class="section-title">
+                    <h2>주간 요약</h2>
+                    <span class="badge">인사이트</span>
+                </div>
+                <canvas id="weeklyChart"></canvas>
+            </div>
+            <div>
+                <h3>주간 메모</h3>
+                <p class="muted">새로운 배포, 회의 요약, 위험 신호 등 간략하게 기록.</p>
+                <ul class="history-list" id="historyList"></ul>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const stats = {
+            projectCount: 9,
+            newIssues: 4,
+            decisionCount: 7,
+            latestUpdate: '2026-02-02 00:40 KST'
+        };
+
+        const timeline = [
+            { title: '대시보드 초안 완성', date: '2026-02-01', status: '진행 중' },
+            { title: 'Design 시스템 리뷰', date: '2026-02-03', status: '논의 중' },
+            { title: 'Content API 통합', date: '2026-02-07', status: '예정' },
+            { title: '배포 및 모니터링', date: '2026-02-09', status: '예정' }
+        ];
+
+        const decisions = [
+            { title: '프롬프트 방어 로그 정비', detail: '경계 라벨 + 출력 검증 룰 적용', owner: 'C-3PO', date: '오늘' },
+            { title: '차트 데이터 표준화', detail: '주간 요약용 JSON 스키마 정의', owner: 'Design team', date: '1일 전' },
+            { title: 'Font/Color 기준 통일', detail: 'Glassmorphism 카드 템플릿 확정', owner: 'UI Ops', date: '2일 전' }
+        ];
+
+        const issues = [
+            { title: '금융 대시보드 계산 오류', status: 'OPEN', priority: '높음', assignee: 'Ho-yeon' },
+            { title: 'Gallery 이미지 lazy load', status: 'IN_PROGRESS', priority: '중간', assignee: 'Min' },
+            { title: 'Canvas 애니메이션 성능', status: 'RESOLVED', priority: '낮음', assignee: 'Jin' },
+            { title: '노션 연동 템플릿 구조', status: 'OPEN', priority: '중간', assignee: 'Seungvis' }
+        ];
+
+        const weeklyData = [5, 3, 6, 4, 7, 2, 5];
+        const weeklyLabels = ['월', '화', '수', '목', '금', '토', '일'];
+
+        const history = [
+            { time: '02-02 09:10', note: '긴급 배포 점검 후 이상 없음' },
+            { time: '02-01 18:30', note: '이슈 로그에 ID 추가' },
+            { time: '01-30 14:20', note: '프롬프트 인젝션 플래그 테스트' }
+        ];
+
+        document.getElementById('projectCount').textContent = stats.projectCount;
+        document.getElementById('newIssues').textContent = stats.newIssues;
+        document.getElementById('decisionCount').textContent = stats.decisionCount;
+        document.getElementById('latestUpdate').textContent = stats.latestUpdate;
+
+        const timelineContainer = document.getElementById('timeline');
+        timeline.forEach(item => {
+            const card = document.createElement('article');
+            card.className = 'timeline-card';
+            card.innerHTML = `
+                <p class="badge">${item.status}</p>
+                <h3>${item.title}</h3>
+                <p class="muted">${item.date}</p>
+            `;
+            timelineContainer.appendChild(card);
+        });
+
+        const decisionListEl = document.getElementById('decisionList');
+        decisions.forEach(entry => {
+            const card = document.createElement('article');
+            card.className = 'decision-card';
+            card.innerHTML = `
+                <h3>${entry.title}</h3>
+                <p>${entry.detail}</p>
+                <span>${entry.owner} · ${entry.date}</span>
+            `;
+            decisionListEl.appendChild(card);
+        });
+
+        const issuesTable = document.getElementById('issuesTable');
+        issues.forEach(issue => {
+            const row = document.createElement('tr');
+            const statusClass = issue.status === 'OPEN' ? 'status-open' : issue.status === 'IN_PROGRESS' ? 'status-progress' : 'status-resolved';
+            row.innerHTML = `
+                <td>${issue.title}</td>
+                <td><span class="status-pill ${statusClass}">${issue.status.replace('_', ' ')}</span></td>
+                <td>${issue.priority}</td>
+                <td>${issue.assignee}</td>
+            `;
+            issuesTable.appendChild(row);
+        });
+
+        const historyList = document.getElementById('historyList');
+        history.forEach(entry => {
+            const item = document.createElement('li');
+            item.className = 'history-item';
+            item.innerHTML = `<div class="history-time">${entry.time}</div><p>${entry.note}</p>`;
+            historyList.appendChild(item);
+        });
+
+        function drawChart() {
+            const canvas = document.getElementById('weeklyChart');
+            const ctx = canvas.getContext('2d');
+            const padding = 30;
+            const barWidth = (canvas.width - padding * 2) / weeklyData.length * 0.7;
+            const maxVal = Math.max(...weeklyData);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4,4]);
+            for (let i = 0; i <= 4; i++) {
+                const y = canvas.height - padding - ((canvas.height - padding * 2)/4)*i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(canvas.width - padding, y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            weeklyData.forEach((value, index) => {
+                const x = padding + (index * ((canvas.width - padding * 2) / weeklyData.length)) + ((canvas.width - padding * 2) / weeklyData.length - barWidth) / 2;
+                const barHeight = (value / maxVal) * (canvas.height - padding * 2);
+                ctx.fillStyle = 'rgba(139,92,246,0.8)';
+                ctx.fillRect(x, canvas.height - padding - barHeight, barWidth, barHeight);
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px "Segoe UI"';
+                ctx.textAlign = 'center';
+                ctx.fillText(weeklyLabels[index], x + barWidth / 2, canvas.height - padding + 16);
+            });
+        }
+
+        window.addEventListener('resize', drawChart);
+        drawChart();
+    </script>
+</body>
+</html>

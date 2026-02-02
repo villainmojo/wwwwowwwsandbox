@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판 - Seungil Playground</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e6ed;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .back-link { color: #6b8bb8; text-decoration: none; }
+        .title { font-size: 28px; font-weight: bold; color: #a855f7; }
+        .write-btn {
+            padding: 12px 24px; background: linear-gradient(135deg, #a855f7, #6366f1);
+            border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer;
+        }
+        
+        .post-list { display: flex; flex-direction: column; gap: 12px; }
+        .post-item {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s;
+        }
+        .post-item:hover { background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.3); }
+        .post-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+        .post-meta { display: flex; gap: 20px; font-size: 13px; color: #8a9bae; }
+        .post-author { color: #a855f7; }
+        
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;
+            padding: 20px; overflow-y: auto;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #1a1a2e; border: 1px solid rgba(168,85,247,0.3);
+            border-radius: 20px; padding: 30px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 20px; color: #a855f7; }
+        .modal-close { background: none; border: none; color: #666; font-size: 28px; cursor: pointer; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 8px; color: #8a9bae; font-size: 14px; }
+        .form-input {
+            width: 100%; padding: 12px 15px; background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+            color: white; font-size: 15px; outline: none;
+        }
+        .form-input:focus { border-color: #a855f7; }
+        .form-textarea { min-height: 150px; resize: vertical; font-family: inherit; }
+        .form-btn {
+            width: 100%; padding: 15px; background: linear-gradient(135deg, #a855f7, #6366f1);
+            border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 16px; cursor: pointer;
+        }
+        
+        .post-detail-title { font-size: 24px; font-weight: bold; margin-bottom: 15px; }
+        .post-detail-meta { display: flex; gap: 20px; font-size: 13px; color: #8a9bae; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .post-detail-content { line-height: 1.8; margin-bottom: 30px; white-space: pre-wrap; }
+        
+        .comments-section { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
+        .comments-title { font-size: 16px; color: #a855f7; margin-bottom: 15px; }
+        .comment-item { background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px; margin-bottom: 10px; }
+        .comment-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .comment-author { color: #6366f1; font-weight: bold; font-size: 14px; }
+        .comment-date { color: #666; font-size: 12px; }
+        .comment-content { font-size: 14px; line-height: 1.6; }
+        
+        .comment-form { display: flex; gap: 10px; margin-top: 15px; }
+        .comment-input { flex: 1; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; }
+        .comment-btn { padding: 12px 20px; background: #6366f1; border: none; border-radius: 8px; color: white; cursor: pointer; }
+        
+        .empty { text-align: center; padding: 50px; color: #666; }
+    
+        /* 모바일 최적화 */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .header { flex-direction: column; gap: 15px; text-align: center; }
+            .title { font-size: 22px; }
+            .write-btn { width: 100%; }
+            .post-item { padding: 15px; }
+            .post-title { font-size: 16px; }
+            .post-meta { flex-wrap: wrap; gap: 10px; font-size: 12px; }
+            .modal { padding: 20px; margin: 10px; border-radius: 15px; }
+            .modal-title { font-size: 18px; }
+            .post-detail-title { font-size: 20px; }
+            .comment-form { flex-direction: column; }
+            .comment-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link" onclick="if(window.parent !== window) { window.parent.showPage('home'); return false; }">← 홈으로</a>
+            <h1 class="title">📝 게시판</h1>
+            <button class="write-btn" onclick="openWriteModal()">✏️ 글쓰기</button>
+        </div>
+        <div class="post-list" id="postList"><div class="empty">로딩 중...</div></div>
+    </div>
+
+    <!-- Write Modal -->
+    <div class="modal-overlay" id="writeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">✏️ 새 글 작성</h2>
+                <button class="modal-close" onclick="closeWriteModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">닉네임</label>
+                <input type="text" class="form-input" id="authorInput" placeholder="익명">
+            </div>
+            <div class="form-group">
+                <label class="form-label">제목</label>
+                <input type="text" class="form-input" id="titleInput" placeholder="제목을 입력하세요">
+            </div>
+            <div class="form-group">
+                <label class="form-label">내용</label>
+                <textarea class="form-input form-textarea" id="contentInput" placeholder="내용을 입력하세요"></textarea>
+            </div>
+            <button class="form-btn" onclick="submitPost()">등록하기</button>
+        </div>
+    </div>
+
+    <!-- Post Detail Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">📄 게시글</h2>
+                <button class="modal-close" onclick="closeDetailModal()">×</button>
+            </div>
+            <div id="postDetail"></div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/api';
+        let currentPostId = null;
+
+        async function loadPosts() {
+            try {
+                const res = await fetch(`${API}/posts`);
+                const data = await res.json();
+                const posts = data.posts || [];
+                
+                if (posts.length === 0) {
+                    document.getElementById('postList').innerHTML = '<div class="empty">아직 게시글이 없습니다. 첫 글을 작성해보세요!</div>';
+                    return;
+                }
+                
+                document.getElementById('postList').innerHTML = posts.map(post => {
+                    const date = new Date(post.createdAt).toLocaleDateString('ko-KR');
+                    return `
+                        <div class="post-item" onclick="openPost(${post.id})">
+                            <div class="post-title">${escapeHtml(post.title)}</div>
+                            <div class="post-meta">
+                                <span class="post-author">${escapeHtml(post.author)}</span>
+                                <span>💬 ${post.comments?.length || 0}</span>
+                                <span>👀 ${post.views || 0}</span>
+                                <span>${date}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                document.getElementById('postList').innerHTML = '<div class="empty">게시글을 불러올 수 없습니다</div>';
+            }
+        }
+
+        async function openPost(id) {
+            currentPostId = id;
+            try {
+                await fetch(`${API}/posts/${id}/view`, { method: 'POST' });
+                const res = await fetch(`${API}/posts/${id}`);
+                const data = await res.json();
+                const post = data.post;
+                
+                const date = new Date(post.createdAt).toLocaleString('ko-KR');
+                let html = `
+                    <div class="post-detail-title">${escapeHtml(post.title)}</div>
+                    <div class="post-detail-meta">
+                        <span class="post-author">${escapeHtml(post.author)}</span>
+                        <span>👀 ${post.views}</span>
+                        <span>${date}</span>
+                    </div>
+                    <div class="post-detail-content">${escapeHtml(post.content)}</div>
+                    <div class="comments-section">
+                        <div class="comments-title">💬 댓글 ${post.comments?.length || 0}개</div>
+                `;
+                
+                (post.comments || []).forEach(c => {
+                    const cdate = new Date(c.createdAt).toLocaleString('ko-KR');
+                    html += `
+                        <div class="comment-item">
+                            <div class="comment-header">
+                                <span class="comment-author">${escapeHtml(c.author)}</span>
+                                <span class="comment-date">${cdate}</span>
+                            </div>
+                            <div class="comment-content">${escapeHtml(c.content)}</div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        <div class="comment-form">
+                            <input type="text" class="comment-input" id="commentAuthor" placeholder="닉네임" style="max-width:120px;">
+                            <input type="text" class="comment-input" id="commentContent" placeholder="댓글을 입력하세요">
+                            <button class="comment-btn" onclick="submitComment()">등록</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('postDetail').innerHTML = html;
+                document.getElementById('detailModal').classList.add('active');
+            } catch (e) {
+                alert('게시글을 불러올 수 없습니다');
+            }
+        }
+
+        async function submitPost() {
+            const title = document.getElementById('titleInput').value.trim();
+            const content = document.getElementById('contentInput').value.trim();
+            const author = document.getElementById('authorInput').value.trim() || '익명';
+            
+            if (!title || !content) { alert('제목과 내용을 입력하세요'); return; }
+            
+            try {
+                const res = await fetch(`${API}/posts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content, author })
+                });
+                if (res.ok) {
+                    closeWriteModal();
+                    document.getElementById('titleInput').value = '';
+                    document.getElementById('contentInput').value = '';
+                    loadPosts();
+                }
+            } catch (e) { alert('등록 실패'); }
+        }
+
+        async function submitComment() {
+            const content = document.getElementById('commentContent').value.trim();
+            const author = document.getElementById('commentAuthor').value.trim() || '익명';
+            if (!content) return;
+            
+            try {
+                const res = await fetch(`${API}/posts/${currentPostId}/comments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, author })
+                });
+                if (res.ok) {
+                    openPost(currentPostId);
+                    loadPosts();
+                }
+            } catch (e) { alert('댓글 등록 실패'); }
+        }
+
+        function openWriteModal() { document.getElementById('writeModal').classList.add('active'); }
+        function closeWriteModal() { document.getElementById('writeModal').classList.remove('active'); }
+        function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); currentPostId = null; }
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        loadPosts();
+    </script>
+</body>
+</html>

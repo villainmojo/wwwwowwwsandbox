@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게임 - SENGVIS Playground</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d1b2a 100%);
+            min-height: 100vh;
+            color: #e0e6ed;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .back-link {
+            color: #6b8bb8;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover { color: #00d4ff; }
+        
+        header {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .title {
+            font-size: 3em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #4169e1, #00d4ff, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #6b7b8c;
+            font-size: 14px;
+            letter-spacing: 3px;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .game-card {
+            background: rgba(13, 27, 42, 0.8);
+            border: 2px solid rgba(65, 105, 225, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(65, 105, 225, 0.6);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
+                        0 0 30px rgba(65, 105, 225, 0.2);
+        }
+        
+        .game-card.neon:hover { border-color: #00d4ff; box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 30px rgba(0, 212, 255, 0.3); }
+        .game-card.zerg:hover { border-color: #8a2be2; box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 30px rgba(138, 43, 226, 0.3); }
+        
+        .game-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .game-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .game-card.neon .game-name { color: #00d4ff; }
+        .game-card.zerg .game-name { color: #8a2be2; }
+        
+        .game-desc {
+            color: #8a9bae;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .game-tags {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            background: rgba(255,255,255,0.05);
+            color: #6b7b8c;
+        }
+        
+        .tag.ranking { background: rgba(255, 215, 0, 0.2); color: #ffd700; }
+        
+        @media (max-width: 600px) {
+            .title { font-size: 2.2em; }
+            .games-grid { grid-template-columns: 1fr; gap: 15px; }
+            .game-card { padding: 25px 20px; }
+            .game-icon { font-size: 48px; }
+            .game-name { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link" onclick="if(window.parent !== window) { window.parent.showPage('home'); return false; }">← 홈으로</a>
+        
+        <header>
+            <h1 class="title">🎮 GAMES</h1>
+            <p class="subtitle">SELECT YOUR GAME</p>
+        </header>
+        
+        <div class="games-grid">
+            <a href="dodge-game.html" class="game-card neon">
+                <span class="game-icon">⚡</span>
+                <h2 class="game-name">Neon Dodge</h2>
+                <p class="game-desc">
+                    네온 빛 속에서 쏟아지는 총알을 피하며 생존하세요!<br>
+                    점점 빨라지는 난이도에서 얼마나 버틸 수 있을까요?
+                </p>
+                <div class="game-tags">
+                    <span class="tag">액션</span>
+                    <span class="tag">회피</span>
+                    <span class="tag ranking">🏆 랭킹</span>
+                </div>
+            </a>
+            
+            <a href="galaga.html" class="game-card zerg">
+                <span class="game-icon">🛸</span>
+                <h2 class="game-name">Space Zerg</h2>
+                <p class="game-desc">
+                    외계 저그 생물체의 침공을 막아라!<br>
+                    파워업을 모아 강력한 무기로 적을 섬멸하세요.
+                </p>
+                <div class="game-tags">
+                    <span class="tag">슈팅</span>
+                    <span class="tag">아케이드</span>
+                    <span class="tag ranking">🏆 랭킹</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

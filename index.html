@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENGVIS Playground</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/favicon.svg">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #000;
+            min-height: 100vh;
+            color: #e0e6ed;
+            overflow-x: hidden;
+        }
+        
+        /* 우주 배경 캔버스 */
+        #spaceCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: rgba(5, 5, 15, 0.85); backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(100, 100, 255, 0.15);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 1000;
+        }
+
+        .logo {
+            font-size: 20px; font-weight: bold;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+        }
+
+        .nav-menu { display: flex; gap: 6px; flex-wrap: wrap; }
+        .nav-btn {
+            padding: 6px 12px; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            color: #a0a0b0; border-radius: 6px; cursor: pointer; font-size: 12px;
+            transition: all 0.3s;
+        }
+        .nav-btn:hover { 
+            background: rgba(139, 92, 246, 0.15); 
+            color: #c4b5fd;
+            border-color: rgba(139, 92, 246, 0.4);
+        }
+        .nav-btn.active { 
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.2)); 
+            color: #c4b5fd; 
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+        }
+
+        .main-content { padding-top: 60px; min-height: 100vh; }
+
+        .home-page {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; min-height: calc(100vh - 60px); padding: 30px;
+            position: relative;
+        }
+
+        .hero-title {
+            font-size: 48px; font-weight: bold;
+            background: linear-gradient(135deg, #818cf8, #c084fc 40%, #f472b6 70%, #818cf8);
+            background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 10px; text-align: center;
+            animation: gradientShift 8s ease infinite;
+            text-shadow: 0 0 60px rgba(139, 92, 246, 0.5);
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero-subtitle { 
+            font-size: 14px; 
+            color: rgba(160, 160, 180, 0.8); 
+            margin-bottom: 20px; 
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .v2-btn {
+            display: inline-block;
+            padding: 12px 28px;
+            margin-bottom: 35px;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+        .v2-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.5);
+        }
+
+        .app-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px; max-width: 1000px; width: 100%;
+            perspective: 1000px;
+        }
+
+        .app-card {
+            position: relative;
+            padding: 25px;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            border-radius: 16px;
+            background: linear-gradient(145deg, rgba(30, 30, 50, 0.8), rgba(15, 15, 30, 0.9));
+            border: 1px solid rgba(100, 100, 150, 0.2);
+            overflow: hidden;
+        }
+        
+        /* 3D 블록 효과 - 옆면 */
+        .app-card::before {
+            content: '';
+            position: absolute;
+            bottom: -8px; left: 8px; right: -8px;
+            height: 100%;
+            background: linear-gradient(145deg, rgba(20, 20, 40, 0.9), rgba(10, 10, 25, 0.95));
+            border-radius: 16px;
+            transform: translateZ(-20px) rotateX(8deg);
+            z-index: -1;
+            transition: all 0.4s ease;
+        }
+        
+        /* 그라데이션 오버레이 */
+        .app-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(99, 102, 241, 0) 0%,
+                rgba(139, 92, 246, 0) 25%,
+                rgba(236, 72, 153, 0) 50%,
+                rgba(248, 113, 113, 0) 75%,
+                rgba(251, 191, 36, 0) 100%
+            );
+            background-size: 400% 400%;
+            border-radius: 16px;
+            opacity: 0;
+            transition: opacity 0.5s ease, background-position 0.8s ease;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .app-card:hover {
+            transform: translateY(-12px) rotateX(5deg) rotateY(-2deg) scale(1.05);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(139, 92, 246, 0.3),
+                0 0 80px rgba(139, 92, 246, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-color: transparent;
+        }
+        
+        .app-card:hover::before {
+            transform: translateZ(-25px) rotateX(12deg);
+            background: linear-gradient(145deg, rgba(60, 40, 100, 0.8), rgba(30, 20, 60, 0.9));
+        }
+        
+        .app-card:hover::after {
+            opacity: 0.6;
+            animation: gradientFlow 3s ease infinite;
+        }
+        
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* 빛나는 테두리 */
+        .app-card-glow {
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(135deg, 
+                #6366f1, #8b5cf6, #a855f7, #ec4899, #f43f5e, #f97316, #eab308, 
+                #6366f1, #8b5cf6
+            );
+            background-size: 400% 400%;
+            border-radius: 18px;
+            z-index: -2;
+            opacity: 0;
+            filter: blur(8px);
+            transition: opacity 0.5s ease;
+        }
+        
+        .app-card:hover .app-card-glow {
+            opacity: 0.8;
+            animation: borderGlow 4s linear infinite;
+        }
+        
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .app-card-inner {
+            position: relative;
+            z-index: 2;
+        }
+
+        .app-icon { 
+            font-size: 42px; 
+            margin-bottom: 14px;
+            filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4));
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+        
+        .app-card:hover .app-icon {
+            transform: scale(1.15) translateY(-3px);
+            filter: drop-shadow(0 0 25px rgba(236, 72, 153, 0.6));
+        }
+        
+        .app-name { 
+            font-size: 17px; 
+            font-weight: 700; 
+            color: #f0f0ff; 
+            margin-bottom: 8px;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+        
+        .app-card:hover .app-name {
+            color: #fff;
+            text-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
+        }
+        
+        .app-desc { 
+            font-size: 12px; 
+            color: rgba(180, 180, 200, 0.7); 
+            line-height: 1.5;
+            transition: color 0.3s ease;
+        }
+        
+        .app-card:hover .app-desc {
+            color: rgba(220, 220, 240, 0.9);
+        }
+
+        .app-frame-container { display: none; width: 100%; height: calc(100vh - 60px); }
+        .app-frame-container.active { display: block; }
+        .app-frame { width: 100%; height: 100%; border: none; }
+
+        .footer { 
+            text-align: center; 
+            padding: 25px; 
+            color: rgba(100, 100, 120, 0.6); 
+            font-size: 11px; 
+            margin-top: 30px;
+            letter-spacing: 1px;
+        }
+        
+        /* 모바일 최적화 */
+        @media (max-width: 768px) {
+            .navbar {
+                height: auto;
+                flex-direction: column;
+                padding: 10px;
+                gap: 10px;
+            }
+            .logo { font-size: 16px; }
+            .nav-menu {
+                width: 100%;
+                justify-content: center;
+                gap: 5px;
+                overflow-x: auto;
+                padding-bottom: 5px;
+            }
+            .nav-btn {
+                padding: 8px 10px;
+                font-size: 11px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            .main-content { padding-top: 100px; }
+            .home-page { padding: 15px; min-height: calc(100vh - 100px); }
+            .hero-title { font-size: 28px; }
+            .hero-subtitle { font-size: 11px; margin-bottom: 25px; letter-spacing: 2px; }
+            .app-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                perspective: 800px;
+            }
+            .app-card { padding: 18px; }
+            .app-card:hover { transform: translateY(-8px) scale(1.03); }
+            .app-icon { font-size: 32px; }
+            .app-name { font-size: 14px; }
+            .app-desc { font-size: 11px; }
+        }
+        
+        @media (max-width: 400px) {
+            .app-grid { grid-template-columns: 1fr; }
+            .nav-menu { justify-content: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 우주 배경 캔버스 -->
+    <canvas id="spaceCanvas"></canvas>
+    
+    <nav class="navbar">
+        <div class="logo">🚀 Seungil Playground</div>
+        <div class="nav-menu">
+            <button class="nav-btn active" data-page="home">Home</button>
+            <button class="nav-btn" data-page="calculator">계산기</button>
+            <button class="nav-btn" data-page="games">게임</button>
+            <button class="nav-btn" data-page="restaurant">맛집</button>
+            <button class="nav-btn" data-page="toilet">화장실</button>
+            <button class="nav-btn" data-page="weather">날씨</button>
+            <button class="nav-btn" data-page="finance">금융</button>
+            <button class="nav-btn" data-page="board">게시판</button>
+            <button class="nav-btn" data-page="news">건설뉴스</button>
+            <button class="nav-btn" data-page="lck">LCK</button>
+            <a href="v2.html" class="nav-btn" style="background: linear-gradient(135deg, #6366f1, #ec4899); color: #fff; border: none; text-decoration: none; font-weight: bold;">✨ V2</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div id="home-page" class="home-page">
+            <h1 class="hero-title">Seungil Playground</h1>
+            <p class="hero-subtitle">Web Apps & Games</p>
+            <a href="v2.html" class="v2-btn">✨ V2 홈 체험하기</a>
+            
+            <div class="app-grid">
+                <div class="app-card" data-page="calculator">
+                    <div class="app-card-glow"></div>
+                    <div class="app-card-inner">
+                        <div class="app-icon">🧮</div>
+                        <div class="app-name">계산기</div>
+                        <div class="app-desc">깔끔한 계산기</div>
+                    </div>
+                </div>
+                <div class="app-card" data-page="games">
+                    <div class="app-card-glow"></div>
+                    <div class="app-card-inner">
+                        <div class="app-icon">🎮</div>
+                        <div class="app-name">게임</div>
+                        <div class="app-desc">Neon Dodge, Space Zerg</div>
+                    </div>
+                </div>
+                <div class="app-card" data-page="restaurant">
+                    <div class="app-card-glow"></div>
+                    <div class="app-card-inner">
+                        <div class="app-icon">🍽️</div>
+                        <div class="app-name">맛집 찾기</div>
+                        <div class="app-desc">내 주변 맛집 검색</div>
+                    </div>
+                </div>
+                <div class="app-card" data-page="toilet">
+                    <div class="app-card-glow"></div>
+                    <div class="app-card-inner">
+                        <div class="app-icon">🚽</div>
+                        <div class="app-name">대똥여지도</div>
+                        <div class="app-desc">내 주변 화장실 + 후기</div>
+                    </div>
+                </div>
+                <div class="app-card" data-page="weather">
+                    <div class="app-card-glow"></div>
+                    <div class="app-card-inner">
+                        <div class="app-icon">🌤️</div>
+                        <div class="app-name">날씨 예보</div>
+                        <div class="app-desc">시간별/주간 날씨</div>
+                    </div>
+                </div>
+                <div class="app-card" data-page="finance">
+                    <div class="app-card-glow"></div>
+                    <div class="app-card-inner">
+                        <div class="app-icon">💰</div>
+                        <div class="app-name">금융 정보</div>
+                        <div class="app-desc">환율, 금값, 주식</div>
+                    </div>
+                </div>
+                <div class="app-card" data-page="board">
+                    <div class="app-card-glow"></div>
+                    <div class="app-card-inner">
+                        <div class="app-icon">📝</div>
+                        <div class="app-name">게시판</div>
+                        <div class="app-desc">자유 게시판</div>
+                    </div>
+                </div>
+                <div class="app-card" data-page="news">
+                    <div class="app-card-glow"></div>
+                    <div class="app-card-inner">
+                        <div class="app-icon">🏗️</div>
+                        <div class="app-name">건설뉴스</div>
+                        <div class="app-desc">건설업계 최신 뉴스</div>
+                    </div>
+                </div>
+                <div class="app-card" data-page="lck">
+                    <div class="app-card-glow"></div>
+                    <div class="app-card-inner">
+                        <div class="app-icon">🏆</div>
+                        <div class="app-name">LCK</div>
+                        <div class="app-desc">리그 순위 & 일정</div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer">Made with 💜 by Seungil & Jarvis</div>
+        </div>
+
+        <div id="calculator-frame" class="app-frame-container"><iframe src="calculator.html" class="app-frame"></iframe></div>
+        <div id="games-frame" class="app-frame-container"><iframe src="games.html" class="app-frame"></iframe></div>
+        <div id="restaurant-frame" class="app-frame-container"><iframe src="restaurant.html" class="app-frame"></iframe></div>
+        <div id="toilet-frame" class="app-frame-container"><iframe src="toilet.html" class="app-frame"></iframe></div>
+        <div id="weather-frame" class="app-frame-container"><iframe src="weather.html" class="app-frame"></iframe></div>
+        <div id="finance-frame" class="app-frame-container"><iframe src="finance.html" class="app-frame"></iframe></div>
+        <div id="board-frame" class="app-frame-container"><iframe src="board.html" class="app-frame"></iframe></div>
+        <div id="news-frame" class="app-frame-container"><iframe src="news.html" class="app-frame"></iframe></div>
+        <div id="lck-frame" class="app-frame-container"><iframe src="lck.html" class="app-frame"></iframe></div>
+    </main>
+
+    <script>
+        // ============================================
+        // 🌌 우주 배경 애니메이션
+        // ============================================
+        const canvas = document.getElementById('spaceCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let W, H;
+        let stars = [];
+        let shootingStars = [];
+        let nebulae = [];
+        let mouseX = 0, mouseY = 0;
+        
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+            initStars();
+            initNebulae();
+        }
+        
+        function initStars() {
+            stars = [];
+            const numStars = Math.floor((W * H) / 3000); // 화면 크기에 따라 별 개수 조절
+            
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * W,
+                    y: Math.random() * H,
+                    z: Math.random() * 3 + 0.5, // 깊이 (패럴랙스용)
+                    size: Math.random() * 1.5 + 0.5,
+                    brightness: Math.random(),
+                    twinkleSpeed: Math.random() * 0.02 + 0.005,
+                    twinklePhase: Math.random() * Math.PI * 2,
+                    color: getStarColor()
+                });
+            }
+        }
+        
+        function getStarColor() {
+            const colors = [
+                'rgba(255, 255, 255, ',      // 흰색
+                'rgba(200, 220, 255, ',      // 푸른 흰색
+                'rgba(255, 240, 220, ',      // 따뜻한 흰색
+                'rgba(180, 200, 255, ',      // 파란색
+                'rgba(255, 200, 180, ',      // 주황색
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        function initNebulae() {
+            nebulae = [];
+            // 2-3개의 성운 생성
+            const numNebulae = 2 + Math.floor(Math.random() * 2);
+            
+            for (let i = 0; i < numNebulae; i++) {
+                nebulae.push({
+                    x: Math.random() * W,
+                    y: Math.random() * H,
+                    radius: Math.random() * 300 + 200,
+                    color1: getNebulaColor(),
+                    color2: getNebulaColor(),
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.0002
+                });
+            }
+        }
+        
+        function getNebulaColor() {
+            const colors = [
+                { r: 100, g: 50, b: 150 },   // 보라
+                { r: 50, g: 80, b: 150 },    // 파랑
+                { r: 150, g: 50, b: 100 },   // 분홍
+                { r: 30, g: 60, b: 120 },    // 진한 파랑
+                { r: 80, g: 40, b: 120 },    // 진한 보라
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        function createShootingStar() {
+            if (shootingStars.length < 3 && Math.random() < 0.003) {
+                const startX = Math.random() * W;
+                const startY = Math.random() * H * 0.5;
+                const angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5;
+                
+                shootingStars.push({
+                    x: startX,
+                    y: startY,
+                    length: Math.random() * 80 + 50,
+                    speed: Math.random() * 15 + 10,
+                    angle: angle,
+                    life: 1,
+                    decay: Math.random() * 0.02 + 0.015
+                });
+            }
+        }
+        
+        function drawNebulae() {
+            nebulae.forEach(nebula => {
+                nebula.rotation += nebula.rotationSpeed;
+                
+                ctx.save();
+                ctx.translate(nebula.x, nebula.y);
+                ctx.rotate(nebula.rotation);
+                
+                // 여러 레이어의 그라데이션으로 성운 효과
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, nebula.radius);
+                gradient.addColorStop(0, `rgba(${nebula.color1.r}, ${nebula.color1.g}, ${nebula.color1.b}, 0.15)`);
+                gradient.addColorStop(0.4, `rgba(${nebula.color2.r}, ${nebula.color2.g}, ${nebula.color2.b}, 0.08)`);
+                gradient.addColorStop(0.7, `rgba(${nebula.color1.r}, ${nebula.color1.g}, ${nebula.color1.b}, 0.03)`);
+                gradient.addColorStop(1, 'transparent');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, nebula.radius, nebula.radius * 0.6, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            });
+        }
+        
+        function drawStars(time) {
+            // 마우스 위치에 따른 패럴랙스 오프셋
+            const parallaxX = (mouseX - W / 2) * 0.02;
+            const parallaxY = (mouseY - H / 2) * 0.02;
+            
+            stars.forEach(star => {
+                // 트윙클 효과
+                const twinkle = Math.sin(time * star.twinkleSpeed + star.twinklePhase);
+                const alpha = 0.4 + star.brightness * 0.4 + twinkle * 0.2;
+                
+                // 패럴랙스 효과 (z값에 따라 다르게 움직임)
+                const px = star.x + parallaxX * star.z;
+                const py = star.y + parallaxY * star.z;
+                
+                // 화면 경계 처리
+                const drawX = ((px % W) + W) % W;
+                const drawY = ((py % H) + H) % H;
+                
+                ctx.fillStyle = star.color + alpha + ')';
+                ctx.beginPath();
+                ctx.arc(drawX, drawY, star.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 밝은 별에 글로우 효과
+                if (star.brightness > 0.7) {
+                    ctx.fillStyle = star.color + (alpha * 0.3) + ')';
+                    ctx.beginPath();
+                    ctx.arc(drawX, drawY, star.size * 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        }
+        
+        function drawShootingStars() {
+            shootingStars.forEach((ss, index) => {
+                ss.x += Math.cos(ss.angle) * ss.speed;
+                ss.y += Math.sin(ss.angle) * ss.speed;
+                ss.life -= ss.decay;
+                
+                if (ss.life <= 0) {
+                    shootingStars.splice(index, 1);
+                    return;
+                }
+                
+                // 유성 꼬리
+                const gradient = ctx.createLinearGradient(
+                    ss.x, ss.y,
+                    ss.x - Math.cos(ss.angle) * ss.length,
+                    ss.y - Math.sin(ss.angle) * ss.length
+                );
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${ss.life})`);
+                gradient.addColorStop(0.3, `rgba(200, 220, 255, ${ss.life * 0.5})`);
+                gradient.addColorStop(1, 'transparent');
+                
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(ss.x, ss.y);
+                ctx.lineTo(
+                    ss.x - Math.cos(ss.angle) * ss.length * ss.life,
+                    ss.y - Math.sin(ss.angle) * ss.length * ss.life
+                );
+                ctx.stroke();
+                
+                // 유성 머리
+                ctx.fillStyle = `rgba(255, 255, 255, ${ss.life})`;
+                ctx.beginPath();
+                ctx.arc(ss.x, ss.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        function animate(time) {
+            // 배경 (깊은 우주)
+            const bgGradient = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H));
+            bgGradient.addColorStop(0, '#0a0a15');
+            bgGradient.addColorStop(0.5, '#050510');
+            bgGradient.addColorStop(1, '#000005');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, W, H);
+            
+            // 성운
+            drawNebulae();
+            
+            // 별
+            drawStars(time);
+            
+            // 유성
+            createShootingStar();
+            drawShootingStars();
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // 마우스 추적 (패럴랙스용)
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+        
+        // 초기화
+        window.addEventListener('resize', resize);
+        resize();
+        animate(0);
+        
+        // ============================================
+        // 페이지 네비게이션
+        // ============================================
+        const pages = ['home','calculator','games','restaurant','toilet','weather','finance','board','news','lck'];
+        
+        function showPage(page, pushState = true) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.page === page));
+            document.getElementById('home-page').style.display = page === 'home' ? 'flex' : 'none';
+            pages.forEach(p => {
+                const frame = document.getElementById(p + '-frame');
+                if (frame) frame.classList.toggle('active', p === page);
+            });
+            
+            if (pushState) {
+                const url = page === 'home' ? '/' : '/#/' + page;
+                history.pushState({ page }, '', url);
+            }
+            
+            const titles = {
+                home: 'SENGVIS Playground',
+                calculator: '계산기 - SENGVIS',
+                dodge: '게임 - SENGVIS',
+                restaurant: '맛집 찾기 - SENGVIS',
+                toilet: '대똥여지도 - SENGVIS',
+                weather: '날씨 - SENGVIS',
+                finance: '금융 - SENGVIS',
+                board: '게시판 - SENGVIS',
+                news: '건설뉴스 - SENGVIS',
+                lck: 'LCK - SENGVIS'
+            };
+            document.title = titles[page] || 'SENGVIS Playground';
+        }
+        
+        window.addEventListener('popstate', (e) => {
+            const page = e.state?.page || getPageFromURL();
+            showPage(page, false);
+        });
+        
+        function getPageFromURL() {
+            const hash = window.location.hash;
+            if (hash.startsWith('#/')) {
+                const page = hash.slice(2);
+                return pages.includes(page) ? page : 'home';
+            }
+            return 'home';
+        }
+        
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
+        document.querySelectorAll('.app-card').forEach(card => card.addEventListener('click', () => showPage(card.dataset.page)));
+        
+        const initialPage = getPageFromURL();
+        showPage(initialPage, false);
+        history.replaceState({ page: initialPage }, '', initialPage === 'home' ? '/' : '/#/' + initialPage);
+    </script>
+</body>
+</html>

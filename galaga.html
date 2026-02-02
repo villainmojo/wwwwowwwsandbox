@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Space Zerg - SENGVIS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(180deg, #0a0a15 0%, #1a0a20 50%, #0a0a15 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            width: 360px;
+            padding: 12px 20px;
+            background: rgba(20, 10, 30, 0.9);
+            border-radius: 12px;
+            border: 1px solid rgba(138, 43, 226, 0.4);
+        }
+        .stat { text-align: center; }
+        .stat-label { color: #888; font-size: 10px; text-transform: uppercase; }
+        .stat-value { color: #e0e0e0; font-size: 18px; font-weight: bold; }
+        .stat-value.score { color: #00ff88; }
+        .stat-value.hp { color: #ff6b6b; }
+        #gameCanvas {
+            border-radius: 12px;
+            border: 2px solid rgba(138, 43, 226, 0.5);
+            box-shadow: 0 0 40px rgba(138, 43, 226, 0.3);
+        }
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 10, 20, 0.95);
+            z-index: 10;
+        }
+        .overlay.hidden { display: none; }
+        .game-title {
+            font-size: 42px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #8a2be2, #00ff88, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px rgba(138, 43, 226, 0.5)); }
+            to { filter: drop-shadow(0 0 40px rgba(0, 255, 136, 0.5)); }
+        }
+        .subtitle { color: #888; font-size: 14px; margin-bottom: 20px; }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .start-btn {
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(135deg, #8a2be2, #6a1b9a);
+            border: 2px solid rgba(138, 43, 226, 0.5);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.5);
+        }
+        .rank-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffd700;
+            background: transparent;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .rank-btn:hover {
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        .controls { color: #666; font-size: 12px; margin-top: 10px; text-align: center; }
+        .controls span { color: #8a2be2; }
+        
+        /* 시작화면 미니 랭킹 */
+        .mini-leaderboard {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(20, 10, 30, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            width: 280px;
+        }
+        .mini-lb-title {
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .mini-lb-list {
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .mini-lb-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .mini-lb-item:last-child { border-bottom: none; }
+        .mini-lb-rank { color: #888; width: 25px; }
+        .mini-lb-rank.gold { color: #ffd700; }
+        .mini-lb-rank.silver { color: #c0c0c0; }
+        .mini-lb-rank.bronze { color: #cd7f32; }
+        .mini-lb-name { flex: 1; color: #e0e0e0; }
+        .mini-lb-score { color: #00ff88; font-weight: bold; }
+        
+        /* 랭킹 전체보기 모달 */
+        .rank-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .rank-modal.hidden { display: none; }
+        .rank-modal-box {
+            background: rgba(20, 10, 30, 0.98);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            max-width: 380px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .rank-modal-title {
+            font-size: 24px;
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .rank-list {
+            margin-bottom: 20px;
+        }
+        .rank-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 5px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .rank-item:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        .rank-item.top1 { background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05)); border: 1px solid rgba(255,215,0,0.3); }
+        .rank-item.top2 { background: linear-gradient(135deg, rgba(192,192,192,0.15), rgba(192,192,192,0.05)); border: 1px solid rgba(192,192,192,0.2); }
+        .rank-item.top3 { background: linear-gradient(135deg, rgba(205,127,50,0.15), rgba(205,127,50,0.05)); border: 1px solid rgba(205,127,50,0.2); }
+        .rank-num {
+            font-size: 18px;
+            font-weight: bold;
+            width: 35px;
+            color: #888;
+        }
+        .rank-num.gold { color: #ffd700; }
+        .rank-num.silver { color: #c0c0c0; }
+        .rank-num.bronze { color: #cd7f32; }
+        .rank-info { flex: 1; }
+        .rank-name { color: #e0e0e0; font-size: 16px; font-weight: bold; }
+        .rank-date { color: #666; font-size: 11px; }
+        .rank-score { color: #00ff88; font-size: 20px; font-weight: bold; }
+        .close-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            color: #888;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .close-btn:hover {
+            color: #fff;
+            border-color: rgba(255,255,255,0.5);
+        }
+        
+        .game-over-box {
+            background: rgba(20, 10, 30, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 107, 107, 0.3);
+            text-align: center;
+            max-width: 350px;
+        }
+        .go-title { font-size: 28px; color: #ff6b6b; margin-bottom: 15px; }
+        .go-score { font-size: 36px; color: #00ff88; margin-bottom: 5px; }
+        .go-wave { font-size: 14px; color: #888; margin-bottom: 20px; }
+        .new-record { color: #ffd700; font-size: 16px; margin-bottom: 15px; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { opacity: 0.7; } to { opacity: 1; } }
+        .name-section { margin: 15px 0; display: none; }
+        .name-section.show { display: block; }
+        .name-input {
+            width: 180px;
+            padding: 10px;
+            font-size: 16px;
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            color: #fff;
+            outline: none;
+        }
+        .submit-btn {
+            margin-top: 10px;
+            padding: 8px 25px;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            border: none;
+            border-radius: 20px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .leaderboard { margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .leaderboard h3 { color: #ffd700; font-size: 14px; margin-bottom: 10px; }
+        .lb-list { max-height: 150px; overflow-y: auto; }
+        .lb-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 12px;
+            margin: 2px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .lb-item.highlight { background: rgba(0, 255, 136, 0.15); border: 1px solid rgba(0, 255, 136, 0.3); }
+        .lb-rank { color: #888; width: 25px; }
+        .lb-rank.gold { color: #ffd700; }
+        .lb-rank.silver { color: #c0c0c0; }
+        .lb-rank.bronze { color: #cd7f32; }
+        .lb-name { flex: 1; color: #e0e0e0; }
+        .lb-score { color: #00ff88; font-weight: bold; }
+        .powerup-indicator {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        .powerup-badge { padding: 5px 12px; border-radius: 15px; font-size: 11px; font-weight: bold; display: none; }
+        .powerup-badge.active { display: block; }
+        .powerup-double { background: rgba(255, 165, 0, 0.8); color: #000; }
+        .powerup-spread { background: rgba(0, 191, 255, 0.8); color: #000; }
+        .back-link { position: absolute; top: 15px; left: 15px; color: #8a2be2; text-decoration: none; font-size: 13px; z-index: 20; }
+        @media (max-width: 400px) {
+            .game-header { width: 320px; }
+            #gameCanvas { width: 320px; height: 520px; }
+            .btn-group { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <a href="games.html" class="back-link">← 게임 목록</a>
+    <div class="game-wrapper">
+        <div class="game-header">
+            <div class="stat">
+                <div class="stat-label">SCORE</div>
+                <div class="stat-value score" id="scoreDisplay">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">WAVE</div>
+                <div class="stat-value" id="waveDisplay">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">HP</div>
+                <div class="stat-value hp" id="hpDisplay">❤❤❤</div>
+            </div>
+        </div>
+
+        <div style="position: relative;">
+            <canvas id="gameCanvas" width="360" height="580"></canvas>
+
+            <div class="powerup-indicator">
+                <div class="powerup-badge powerup-double" id="doubleBadge">🔥 DOUBLE</div>
+                <div class="powerup-badge powerup-spread" id="spreadBadge">💫 SPREAD</div>
+            </div>
+
+            <div class="overlay" id="startScreen">
+                <div class="game-title">SPACE ZERG</div>
+                <div class="subtitle">Destroy the alien swarm</div>
+                <div class="btn-group">
+                    <button class="start-btn" id="startBtn">START</button>
+                    <button class="rank-btn" id="showRankBtn">🏆 랭킹</button>
+                </div>
+                <div class="controls"><span>← →</span> or <span>A D</span> 이동 | 자동 사격</div>
+                
+                <div class="mini-leaderboard">
+                    <div class="mini-lb-title">🏆 TOP 5</div>
+                    <div class="mini-lb-list" id="miniLbList">로딩...</div>
+                </div>
+            </div>
+
+            <div class="overlay hidden" id="gameOverScreen">
+                <div class="game-over-box">
+                    <div class="go-title">GAME OVER</div>
+                    <div class="go-score" id="finalScore">0</div>
+                    <div class="go-wave" id="finalWave">Wave 1</div>
+                    <div class="new-record hidden" id="newRecord">🏆 TOP 10!</div>
+                    <div class="name-section" id="nameSection">
+                        <input type="text" class="name-input" id="nameInput" placeholder="이름" maxlength="10">
+                        <br>
+                        <button class="submit-btn" id="submitBtn">등록</button>
+                    </div>
+                    <div class="leaderboard">
+                        <h3>🏆 LEADERBOARD</h3>
+                        <div class="lb-list" id="lbList">로딩...</div>
+                    </div>
+                    <button class="start-btn" id="restartBtn" style="margin-top: 20px;">RETRY</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 랭킹 모달 -->
+    <div class="rank-modal hidden" id="rankModal">
+        <div class="rank-modal-box">
+            <div class="rank-modal-title">🏆 LEADERBOARD</div>
+            <div class="rank-list" id="rankList">로딩...</div>
+            <button class="close-btn" id="closeRankBtn">닫기</button>
+        </div>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// Game state
+let gameRunning = false;
+let score = 0;
+let wave = 1;
+let hp = 3;
+let gameTime = 0;
+
+// Player
+const player = { x: W / 2, y: H - 60, width: 44, height: 50, speed: 6 };
+
+// Arrays
+let bullets = [];
+let enemies = [];
+let enemyBullets = [];
+let powerups = [];
+let particles = [];
+
+// Powerups
+let hasDouble = false;
+let hasSpread = false;
+let doubleTimer = 0;
+let spreadTimer = 0;
+
+// Controls
+const keys = {};
+let touchX = null;
+
+// Enemy types (저그 스타일 - 업그레이드)
+const enemyTypes = [
+    { name: 'zergling', width: 32, height: 28, hp: 1, speed: 1.5, score: 10, color: '#8b4513', accent: '#cd853f' },
+    { name: 'hydra', width: 38, height: 34, hp: 2, speed: 1, score: 25, color: '#556b2f', accent: '#9acd32' },
+    { name: 'muta', width: 44, height: 40, hp: 3, speed: 2, score: 50, color: '#4a0080', accent: '#9932cc' }
+];
+
+// Leaderboard
+let scores = [];
+let pendingScore = 0;
+
+async function loadScores() {
+    try {
+        const res = await fetch('/api/galaga/scores');
+        const data = await res.json();
+        if (data.success) scores = data.scores;
+        renderLeaderboard();
+        renderMiniLeaderboard();
+    } catch (e) { console.error(e); }
+}
+
+function renderMiniLeaderboard() {
+    const list = document.getElementById('miniLbList');
+    if (!scores.length) {
+        list.innerHTML = '<div style="color:#666;padding:10px;text-align:center;">기록 없음</div>';
+        return;
+    }
+    list.innerHTML = scores.slice(0, 5).map((s, i) => {
+        const rc = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+        return `<div class="mini-lb-item"><span class="mini-lb-rank ${rc}">${i+1}</span><span class="mini-lb-name">${escapeHtml(s.name)}</span><span class="mini-lb-score">${s.score.toLocaleString()}</span></div>`;
+    }).join('');
+}
+
+function renderLeaderboard(highlight = null) {
+    const list = document.getElementById('lbList');
+    if (!scores.length) {
+        list.innerHTML = '<div style="color:#666;padding:15px;">기록 없음</div>';
+        return;
+    }
+    list.innerHTML = scores.slice(0, 10).map((s, i) => {
+        const rc = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+        const hl = highlight === s.score ? 'highlight' : '';
+        return `<div class="lb-item ${hl}"><span class="lb-rank ${rc}">${i+1}</span><span class="lb-name">${escapeHtml(s.name)}</span><span class="lb-score">${s.score.toLocaleString()}</span></div>`;
+    }).join('');
+}
+
+function renderFullLeaderboard() {
+    const list = document.getElementById('rankList');
+    if (!scores.length) {
+        list.innerHTML = '<div style="color:#666;padding:30px;text-align:center;">기록 없음</div>';
+        return;
+    }
+    list.innerHTML = scores.slice(0, 10).map((s, i) => {
+        const rc = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+        const tc = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+        const date = s.date ? new Date(s.date).toLocaleDateString('ko-KR') : '';
+        return `<div class="rank-item ${tc}">
+            <span class="rank-num ${rc}">${i+1}</span>
+            <div class="rank-info">
+                <div class="rank-name">${escapeHtml(s.name)}</div>
+                <div class="rank-date">${date}</div>
+            </div>
+            <span class="rank-score">${s.score.toLocaleString()}</span>
+        </div>`;
+    }).join('');
+}
+
+function escapeHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t;
+    return d.innerHTML;
+}
+
+function isTop10(s) {
+    return scores.length < 10 || s > scores[Math.min(9, scores.length - 1)].score;
+}
+
+async function submitScore(name, score) {
+    try {
+        const res = await fetch('/api/galaga/scores', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, score })
+        });
+        const data = await res.json();
+        if (data.success) {
+            scores = data.scores;
+            renderLeaderboard(score);
+            renderMiniLeaderboard();
+        }
+    } catch (e) { console.error(e); }
+}
+
+// ============================================
+// 🚀 멋있는 플레이어 (SF 전투기)
+// ============================================
+function drawPlayer() {
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    
+    const w = player.width;
+    const h = player.height;
+    const time = gameTime * 0.1;
+    
+    // 쉴드 이펙트 (은은한 보호막)
+    ctx.strokeStyle = `rgba(0, 255, 200, ${0.2 + Math.sin(time) * 0.1})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, w * 0.7, h * 0.55, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // 메인 엔진 불꽃 (중앙)
+    const flameHeight = 18 + Math.random() * 8;
+    const flameGrad = ctx.createLinearGradient(0, h * 0.3, 0, h * 0.3 + flameHeight);
+    flameGrad.addColorStop(0, '#ffffff');
+    flameGrad.addColorStop(0.2, '#00ffff');
+    flameGrad.addColorStop(0.5, '#0088ff');
+    flameGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = flameGrad;
+    ctx.beginPath();
+    ctx.moveTo(-6, h * 0.3);
+    ctx.quadraticCurveTo(-3, h * 0.3 + flameHeight * 0.7, 0, h * 0.3 + flameHeight);
+    ctx.quadraticCurveTo(3, h * 0.3 + flameHeight * 0.7, 6, h * 0.3);
+    ctx.fill();
+    
+    // 사이드 엔진 불꽃
+    const sideFlame = 10 + Math.random() * 5;
+    ctx.fillStyle = flameGrad;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.35, h * 0.2);
+    ctx.quadraticCurveTo(-w * 0.35, h * 0.2 + sideFlame, -w * 0.32, h * 0.2 + sideFlame);
+    ctx.quadraticCurveTo(-w * 0.29, h * 0.2 + sideFlame * 0.5, -w * 0.26, h * 0.2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(w * 0.35, h * 0.2);
+    ctx.quadraticCurveTo(w * 0.35, h * 0.2 + sideFlame, w * 0.32, h * 0.2 + sideFlame);
+    ctx.quadraticCurveTo(w * 0.29, h * 0.2 + sideFlame * 0.5, w * 0.26, h * 0.2);
+    ctx.fill();
+    
+    // 그림자 (깊이감)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, h * 0.35, w * 0.3, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // 날개 (왼쪽)
+    const wingGrad = ctx.createLinearGradient(-w * 0.5, 0, -w * 0.1, 0);
+    wingGrad.addColorStop(0, '#1a3a5c');
+    wingGrad.addColorStop(0.5, '#2d5a87');
+    wingGrad.addColorStop(1, '#4a7ab0');
+    ctx.fillStyle = wingGrad;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.15, -h * 0.1);
+    ctx.lineTo(-w * 0.5, h * 0.15);
+    ctx.lineTo(-w * 0.55, h * 0.2);
+    ctx.lineTo(-w * 0.45, h * 0.22);
+    ctx.lineTo(-w * 0.15, h * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    
+    // 날개 디테일 (왼쪽)
+    ctx.strokeStyle = '#00d4ff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.2, -h * 0.05);
+    ctx.lineTo(-w * 0.4, h * 0.12);
+    ctx.stroke();
+    
+    // 날개 (오른쪽)
+    const wingGrad2 = ctx.createLinearGradient(w * 0.5, 0, w * 0.1, 0);
+    wingGrad2.addColorStop(0, '#1a3a5c');
+    wingGrad2.addColorStop(0.5, '#2d5a87');
+    wingGrad2.addColorStop(1, '#4a7ab0');
+    ctx.fillStyle = wingGrad2;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.15, -h * 0.1);
+    ctx.lineTo(w * 0.5, h * 0.15);
+    ctx.lineTo(w * 0.55, h * 0.2);
+    ctx.lineTo(w * 0.45, h * 0.22);
+    ctx.lineTo(w * 0.15, h * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    
+    // 날개 디테일 (오른쪽)
+    ctx.beginPath();
+    ctx.moveTo(w * 0.2, -h * 0.05);
+    ctx.lineTo(w * 0.4, h * 0.12);
+    ctx.stroke();
+    
+    // 메인 바디 (그라데이션)
+    const bodyGrad = ctx.createLinearGradient(0, -h * 0.5, 0, h * 0.3);
+    bodyGrad.addColorStop(0, '#4a7ab0');
+    bodyGrad.addColorStop(0.3, '#2d5a87');
+    bodyGrad.addColorStop(0.7, '#1a3a5c');
+    bodyGrad.addColorStop(1, '#0d1b2a');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, -h * 0.5);
+    ctx.lineTo(w * 0.12, -h * 0.3);
+    ctx.lineTo(w * 0.15, -h * 0.1);
+    ctx.lineTo(w * 0.12, h * 0.2);
+    ctx.lineTo(w * 0.08, h * 0.3);
+    ctx.lineTo(-w * 0.08, h * 0.3);
+    ctx.lineTo(-w * 0.12, h * 0.2);
+    ctx.lineTo(-w * 0.15, -h * 0.1);
+    ctx.lineTo(-w * 0.12, -h * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    
+    // 바디 하이라이트
+    ctx.strokeStyle = 'rgba(0, 212, 255, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.08, -h * 0.4);
+    ctx.lineTo(-w * 0.1, h * 0.1);
+    ctx.stroke();
+    
+    // 조종석 (글로우 효과)
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 10;
+    const cockpitGrad = ctx.createRadialGradient(0, -h * 0.15, 0, 0, -h * 0.15, 10);
+    cockpitGrad.addColorStop(0, '#00ffff');
+    cockpitGrad.addColorStop(0.5, '#0088aa');
+    cockpitGrad.addColorStop(1, '#004455');
+    ctx.fillStyle = cockpitGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, -h * 0.15, 5, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    
+    // 무기 포트 (양쪽 날개 끝)
+    ctx.fillStyle = '#ff4444';
+    ctx.shadowColor = '#ff4444';
+    ctx.shadowBlur = 5;
+    ctx.beginPath();
+    ctx.arc(-w * 0.45, h * 0.18, 3, 0, Math.PI * 2);
+    ctx.arc(w * 0.45, h * 0.18, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    
+    // 노즈 팁 라이트
+    ctx.fillStyle = '#00ff88';
+    ctx.shadowColor = '#00ff88';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(0, -h * 0.45, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    
+    ctx.restore();
+}
+
+// ============================================
+// 👾 멋있는 적 (저그 에일리언)
+// ============================================
+function drawEnemy(e) {
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    
+    const time = gameTime * 0.08 + e.x * 0.1;
+    const pulse = 1 + Math.sin(time) * 0.05;
+    const w = e.width * pulse;
+    const h = e.height * pulse;
+    
+    // 저그링 (빠른 근접 유닛)
+    if (e.name === 'zergling') {
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath();
+        ctx.ellipse(2, 4, w * 0.4, h * 0.25, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.strokeStyle = e.color;
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 3; i++) {
+            const legAnim = Math.sin(time * 3 + i * 1.5) * 5;
+            ctx.beginPath();
+            ctx.moveTo(-w * 0.2, h * (0.1 + i * 0.15));
+            ctx.quadraticCurveTo(-w * 0.5, h * (0.1 + i * 0.15) + legAnim, -w * 0.6, h * (0.2 + i * 0.15) + legAnim);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(w * 0.2, h * (0.1 + i * 0.15));
+            ctx.quadraticCurveTo(w * 0.5, h * (0.1 + i * 0.15) - legAnim, w * 0.6, h * (0.2 + i * 0.15) - legAnim);
+            ctx.stroke();
+        }
+        
+        const bodyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.4);
+        bodyGrad.addColorStop(0, e.accent);
+        bodyGrad.addColorStop(0.6, e.color);
+        bodyGrad.addColorStop(1, '#2a1a0a');
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, w * 0.35, h * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.15, -h * 0.3);
+        ctx.quadraticCurveTo(0, -h * 0.1, w * 0.15, -h * 0.3);
+        ctx.stroke();
+        
+        ctx.fillStyle = '#3a2010';
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.1, -h * 0.35);
+        ctx.lineTo(-w * 0.25, -h * 0.55);
+        ctx.lineTo(-w * 0.15, -h * 0.5);
+        ctx.lineTo(-w * 0.05, -h * 0.4);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(w * 0.1, -h * 0.35);
+        ctx.lineTo(w * 0.25, -h * 0.55);
+        ctx.lineTo(w * 0.15, -h * 0.5);
+        ctx.lineTo(w * 0.05, -h * 0.4);
+        ctx.fill();
+        
+        ctx.fillStyle = '#ff0000';
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(-w * 0.12, -h * 0.15, 3, 0, Math.PI * 2);
+        ctx.arc(w * 0.12, -h * 0.15, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+    
+    else if (e.name === 'hydra') {
+        ctx.strokeStyle = e.color;
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.3);
+        const tailWave = Math.sin(time * 2) * 8;
+        ctx.quadraticCurveTo(tailWave, h * 0.5, tailWave * 0.5, h * 0.65);
+        ctx.stroke();
+        
+        for (let i = 2; i >= 0; i--) {
+            const segY = i * h * 0.15;
+            const segSize = (3 - i) * 0.08 + 0.25;
+            const segGrad = ctx.createRadialGradient(0, segY, 0, 0, segY, w * segSize);
+            segGrad.addColorStop(0, e.accent);
+            segGrad.addColorStop(0.7, e.color);
+            segGrad.addColorStop(1, '#1a2a10');
+            ctx.fillStyle = segGrad;
+            ctx.beginPath();
+            ctx.ellipse(0, segY, w * segSize, h * 0.12, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        ctx.strokeStyle = e.accent;
+        ctx.lineWidth = 3;
+        const armWave = Math.sin(time * 2.5) * 4;
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.2, -h * 0.1);
+        ctx.quadraticCurveTo(-w * 0.45 + armWave, -h * 0.25, -w * 0.35, -h * 0.45);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(w * 0.2, -h * 0.1);
+        ctx.quadraticCurveTo(w * 0.45 - armWave, -h * 0.25, w * 0.35, -h * 0.45);
+        ctx.stroke();
+        
+        ctx.fillStyle = '#00ff00';
+        ctx.shadowColor = '#00ff00';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(-w * 0.35, -h * 0.45, 3, 0, Math.PI * 2);
+        ctx.arc(w * 0.35, -h * 0.45, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        
+        const headGrad = ctx.createRadialGradient(0, -h * 0.25, 0, 0, -h * 0.25, w * 0.25);
+        headGrad.addColorStop(0, e.accent);
+        headGrad.addColorStop(0.7, e.color);
+        headGrad.addColorStop(1, '#1a2a10');
+        ctx.fillStyle = headGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, -h * 0.25, w * 0.22, h * 0.18, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = e.color;
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.3, -h * 0.15);
+        ctx.quadraticCurveTo(-w * 0.4, -h * 0.35, -w * 0.2, -h * 0.45);
+        ctx.lineTo(0, -h * 0.35);
+        ctx.lineTo(w * 0.2, -h * 0.45);
+        ctx.quadraticCurveTo(w * 0.4, -h * 0.35, w * 0.3, -h * 0.15);
+        ctx.fill();
+        
+        ctx.fillStyle = '#ffff00';
+        ctx.shadowColor = '#ffff00';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(-w * 0.08, -h * 0.28, 3, 0, Math.PI * 2);
+        ctx.arc(w * 0.08, -h * 0.28, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+    
+    else if (e.name === 'muta') {
+        const wingFlap = Math.sin(time * 6) * 0.3;
+        
+        ctx.fillStyle = 'rgba(74, 0, 128, 0.7)';
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.1, -h * 0.1);
+        ctx.quadraticCurveTo(-w * 0.5, -h * (0.4 + wingFlap), -w * 0.55, h * 0.1);
+        ctx.quadraticCurveTo(-w * 0.35, h * 0.15, -w * 0.1, h * 0.05);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.moveTo(w * 0.1, -h * 0.1);
+        ctx.quadraticCurveTo(w * 0.5, -h * (0.4 - wingFlap), w * 0.55, h * 0.1);
+        ctx.quadraticCurveTo(w * 0.35, h * 0.15, w * 0.1, h * 0.05);
+        ctx.fill();
+        
+        ctx.strokeStyle = e.accent;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.15, -h * 0.05);
+        ctx.lineTo(-w * 0.45, -h * (0.25 + wingFlap * 0.5));
+        ctx.moveTo(-w * 0.15, 0);
+        ctx.lineTo(-w * 0.4, h * 0.05);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(w * 0.15, -h * 0.05);
+        ctx.lineTo(w * 0.45, -h * (0.25 - wingFlap * 0.5));
+        ctx.moveTo(w * 0.15, 0);
+        ctx.lineTo(w * 0.4, h * 0.05);
+        ctx.stroke();
+        
+        ctx.strokeStyle = e.color;
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        const tailSwing = Math.sin(time * 1.5) * 10;
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.2);
+        ctx.quadraticCurveTo(tailSwing * 0.5, h * 0.35, tailSwing, h * 0.5);
+        ctx.stroke();
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(tailSwing, h * 0.5);
+        ctx.quadraticCurveTo(tailSwing * 1.2, h * 0.55, tailSwing * 0.8, h * 0.6);
+        ctx.stroke();
+        
+        const bodyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.3);
+        bodyGrad.addColorStop(0, e.accent);
+        bodyGrad.addColorStop(0.6, e.color);
+        bodyGrad.addColorStop(1, '#1a0030');
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, w * 0.25, h * 0.28, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.strokeStyle = 'rgba(153, 50, 204, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, -h * 0.05, w * 0.18, Math.PI * 0.8, Math.PI * 0.2, true);
+        ctx.stroke();
+        
+        ctx.fillStyle = e.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -h * 0.25);
+        ctx.lineTo(-w * 0.1, -h * 0.45);
+        ctx.quadraticCurveTo(0, -h * 0.5, w * 0.1, -h * 0.45);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillStyle = '#ff00ff';
+        ctx.shadowColor = '#ff00ff';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(0, -h * 0.32, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(-w * 0.08, -h * 0.25, 2.5, 0, Math.PI * 2);
+        ctx.arc(w * 0.08, -h * 0.25, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+    
+    if (e.hp > 1) {
+        const hpRatio = e.currentHp / e.hp;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(-w * 0.35, -h * 0.55, w * 0.7, 4);
+        ctx.fillStyle = hpRatio > 0.5 ? '#00ff00' : hpRatio > 0.25 ? '#ffff00' : '#ff0000';
+        ctx.fillRect(-w * 0.35, -h * 0.55, w * 0.7 * hpRatio, 4);
+    }
+    
+    ctx.restore();
+}
+
+function drawBullet(b, isEnemy = false) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    
+    if (isEnemy) {
+        const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 8);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.3, '#ff3366');
+        grad.addColorStop(0.7, '#aa0033');
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        const grad = ctx.createLinearGradient(0, -10, 0, 10);
+        grad.addColorStop(0, 'transparent');
+        grad.addColorStop(0.3, '#00ffff');
+        grad.addColorStop(0.5, '#ffffff');
+        grad.addColorStop(0.7, '#00ffff');
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 8;
+        ctx.fillRect(-2, -10, 4, 20);
+    }
+    
+    ctx.restore();
+}
+
+function drawPowerup(p) {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(gameTime * 0.05);
+    
+    const color = p.type === 'double' ? '#ffa500' : '#00bfff';
+    
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+    
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle = (i * 60 - 90) * Math.PI / 180;
+        const r = 14;
+        const method = i === 0 ? 'moveTo' : 'lineTo';
+        ctx[method](Math.cos(angle) * r, Math.sin(angle) * r);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    
+    ctx.fillStyle = `${color}44`;
+    ctx.fill();
+    
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(p.type === 'double' ? '2×' : '◈', 0, 1);
+    
+    ctx.restore();
+    ctx.shadowBlur = 0;
+}
+
+function spawnEnemy() {
+    const typeIndex = Math.floor(Math.random() * Math.min(wave, enemyTypes.length));
+    const type = enemyTypes[typeIndex];
+    enemies.push({
+        x: Math.random() * (W - 60) + 30,
+        y: -30,
+        ...type,
+        currentHp: type.hp,
+        dir: Math.random() < 0.5 ? 1 : -1,
+        shootTimer: Math.random() * 60
+    });
+}
+
+function spawnPowerup(x, y) {
+    if (Math.random() < 0.15) {
+        powerups.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random() - 0.5) * 4,
+            type: Math.random() < 0.5 ? 'double' : 'spread'
+        });
+    }
+}
+
+function shoot() {
+    const baseX = player.x;
+    const baseY = player.y - player.height/2;
+    
+    if (hasSpread) {
+        for (let angle = -30; angle <= 30; angle += 15) {
+            const rad = angle * Math.PI / 180;
+            bullets.push({ x: baseX, y: baseY, vx: Math.sin(rad) * 8, vy: -Math.cos(rad) * 8 });
+        }
+    } else if (hasDouble) {
+        bullets.push({ x: baseX - 12, y: baseY, vx: 0, vy: -10 });
+        bullets.push({ x: baseX + 12, y: baseY, vx: 0, vy: -10 });
+    } else {
+        bullets.push({ x: baseX, y: baseY, vx: 0, vy: -10 });
+    }
+}
+
+function update() {
+    if (!gameRunning) return;
+    gameTime++;
+    
+    if (keys['ArrowLeft'] || keys['KeyA']) player.x -= player.speed;
+    if (keys['ArrowRight'] || keys['KeyD']) player.x += player.speed;
+    if (touchX !== null) {
+        const diff = touchX - player.x;
+        player.x += Math.sign(diff) * Math.min(Math.abs(diff), player.speed);
+    }
+    player.x = Math.max(player.width/2, Math.min(W - player.width/2, player.x));
+    
+    if (gameTime % 8 === 0) shoot();
+    
+    bullets = bullets.filter(b => {
+        b.x += b.vx || 0;
+        b.y += b.vy || 0;
+        return b.y > -10 && b.y < H + 10 && b.x > -10 && b.x < W + 10;
+    });
+    
+    const spawnRate = Math.max(30, 90 - wave * 5);
+    if (gameTime % spawnRate === 0) spawnEnemy();
+    
+    enemies.forEach(e => {
+        e.y += e.speed;
+        e.x += e.dir * 1.5;
+        if (e.x < 30 || e.x > W - 30) e.dir *= -1;
+        
+        e.shootTimer--;
+        if (e.shootTimer <= 0 && e.y > 50 && e.y < H - 100) {
+            enemyBullets.push({ x: e.x, y: e.y + e.height/2, vy: 4 + wave * 0.3 });
+            e.shootTimer = 60 + Math.random() * 60;
+        }
+    });
+    
+    enemyBullets = enemyBullets.filter(b => {
+        b.y += b.vy;
+        return b.y < H + 10;
+    });
+    
+    powerups.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 15 || p.x > W - 15) p.vx *= -1;
+        if (p.y < 15 || p.y > H - 15) p.vy *= -1;
+    });
+    
+    if (hasDouble) { doubleTimer--; if (doubleTimer <= 0) hasDouble = false; }
+    if (hasSpread) { spreadTimer--; if (spreadTimer <= 0) hasSpread = false; }
+    document.getElementById('doubleBadge').classList.toggle('active', hasDouble);
+    document.getElementById('spreadBadge').classList.toggle('active', hasSpread);
+    
+    bullets.forEach((b, bi) => {
+        enemies.forEach((e, ei) => {
+            if (Math.abs(b.x - e.x) < e.width/2 && Math.abs(b.y - e.y) < e.height/2) {
+                bullets.splice(bi, 1);
+                e.currentHp--;
+                if (e.currentHp <= 0) {
+                    score += e.score * wave;
+                    spawnPowerup(e.x, e.y);
+                    enemies.splice(ei, 1);
+                    createExplosion(e.x, e.y, e.color);
+                }
+            }
+        });
+    });
+    
+    enemyBullets.forEach((b, i) => {
+        if (Math.abs(b.x - player.x) < 15 && Math.abs(b.y - player.y) < 20) {
+            enemyBullets.splice(i, 1);
+            takeDamage();
+        }
+    });
+    
+    enemies.forEach((e, i) => {
+        if (Math.abs(e.x - player.x) < (e.width + player.width)/2 - 5 &&
+            Math.abs(e.y - player.y) < (e.height + player.height)/2 - 5) {
+            enemies.splice(i, 1);
+            takeDamage();
+        }
+    });
+    
+    powerups.forEach((p, i) => {
+        if (Math.abs(p.x - player.x) < 25 && Math.abs(p.y - player.y) < 25) {
+            if (p.type === 'double') { hasDouble = true; doubleTimer = 30 * 60; }
+            else { hasSpread = true; spreadTimer = 30 * 60; }
+            powerups.splice(i, 1);
+        }
+    });
+    
+    enemies = enemies.filter(e => e.y < H + 50);
+    
+    if (gameTime % 600 === 0) {
+        wave++;
+        document.getElementById('waveDisplay').textContent = wave;
+    }
+    
+    particles = particles.filter(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.1;
+        p.life--;
+        return p.life > 0;
+    });
+    
+    document.getElementById('scoreDisplay').textContent = score.toLocaleString();
+}
+
+function takeDamage() {
+    hp--;
+    document.getElementById('hpDisplay').textContent = '❤'.repeat(Math.max(0, hp)) + '🖤'.repeat(Math.max(0, 3 - hp));
+    if (hp <= 0) gameOver();
+}
+
+function createExplosion(x, y, color) {
+    for (let i = 0; i < 15; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 4;
+        particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 2,
+            color: i % 2 === 0 ? color : '#ffaa00',
+            life: 30 + Math.random() * 25,
+            size: 2 + Math.random() * 3
+        });
+    }
+}
+
+function draw() {
+    ctx.fillStyle = '#0a0a15';
+    ctx.fillRect(0, 0, W, H);
+    
+    ctx.fillStyle = '#ffffff';
+    for (let i = 0; i < 60; i++) {
+        const speed = 0.3 + (i % 3) * 0.2;
+        const x = (i * 73 + gameTime * speed * 0.5) % W;
+        const y = (i * 97 + gameTime * speed) % H;
+        const size = 1 + (i % 3) * 0.5;
+        ctx.globalAlpha = 0.2 + (i % 5) * 0.12;
+        ctx.fillRect(x, y, size, size);
+    }
+    ctx.globalAlpha = 1;
+    
+    powerups.forEach(drawPowerup);
+    drawPlayer();
+    bullets.forEach(b => drawBullet(b, false));
+    enemyBullets.forEach(b => drawBullet(b, true));
+    enemies.forEach(drawEnemy);
+    
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life / 55;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size || 3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+}
+
+function gameLoop() {
+    update();
+    draw();
+    if (gameRunning) requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+    score = 0; wave = 1; hp = 3; gameTime = 0;
+    bullets = []; enemies = []; enemyBullets = []; powerups = []; particles = [];
+    hasDouble = false; hasSpread = false;
+    player.x = W / 2;
+    
+    document.getElementById('scoreDisplay').textContent = '0';
+    document.getElementById('waveDisplay').textContent = '1';
+    document.getElementById('hpDisplay').textContent = '❤❤❤';
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('gameOverScreen').classList.add('hidden');
+    
+    gameRunning = true;
+    gameLoop();
+}
+
+function gameOver() {
+    gameRunning = false;
+    pendingScore = score;
+    
+    document.getElementById('finalScore').textContent = score.toLocaleString();
+    document.getElementById('finalWave').textContent = `Wave ${wave}`;
+    
+    const isTop = isTop10(score);
+    document.getElementById('newRecord').classList.toggle('hidden', !isTop);
+    document.getElementById('nameSection').classList.toggle('show', isTop);
+    if (isTop) document.getElementById('nameInput').focus();
+    
+    renderLeaderboard();
+    document.getElementById('gameOverScreen').classList.remove('hidden');
+}
+
+// Events
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+document.getElementById('submitBtn').addEventListener('click', async () => {
+    const name = document.getElementById('nameInput').value.trim() || '익명';
+    await submitScore(name, pendingScore);
+    document.getElementById('nameSection').classList.remove('show');
+    document.getElementById('newRecord').classList.add('hidden');
+});
+document.getElementById('nameInput').addEventListener('keypress', e => {
+    if (e.key === 'Enter') document.getElementById('submitBtn').click();
+});
+
+// 랭킹 모달
+document.getElementById('showRankBtn').addEventListener('click', () => {
+    renderFullLeaderboard();
+    document.getElementById('rankModal').classList.remove('hidden');
+});
+document.getElementById('closeRankBtn').addEventListener('click', () => {
+    document.getElementById('rankModal').classList.add('hidden');
+});
+document.getElementById('rankModal').addEventListener('click', (e) => {
+    if (e.target.id === 'rankModal') {
+        document.getElementById('rankModal').classList.add('hidden');
+    }
+});
+
+document.addEventListener('keydown', e => { keys[e.code] = true; });
+document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+canvas.addEventListener('touchstart', e => {
+    touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+});
+canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+});
+canvas.addEventListener('touchend', () => { touchX = null; });
+
+loadScores();
+</script>
+</body>
+</html>

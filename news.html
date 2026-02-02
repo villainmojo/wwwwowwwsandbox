@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>건설뉴스 - SENGVIS Playground</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+        header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        header h1 span { color: #f39c12; }
+        header p { opacity: 0.7; }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .back-link:hover { text-decoration: underline; }
+        
+        .news-sources {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .source-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .source-btn:hover, .source-btn.active {
+            background: #3498db;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            opacity: 0.7;
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px; height: 20px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .news-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .news-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.1);
+            border-color: #3498db;
+        }
+        .news-card h3 {
+            font-size: 1.1em;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .news-card h3 a {
+            color: #fff;
+            text-decoration: none;
+        }
+        .news-card h3 a:hover { color: #3498db; }
+        .news-card .description {
+            font-size: 0.9em;
+            opacity: 0.7;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .news-card .meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            opacity: 0.5;
+        }
+        .news-card .source {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #e74c3c;
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #3498db;
+            border: none;
+            color: #fff;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(52,152,219,0.4);
+            transition: all 0.3s;
+        }
+        .refresh-btn:hover {
+            transform: scale(1.1);
+            background: #2980b9;
+        }
+    
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            header { padding: 25px 15px; }
+            header h1 { font-size: 1.8em; }
+            .news-sources { gap: 8px; }
+            .source-btn { padding: 8px 14px; font-size: 12px; }
+            .news-grid { grid-template-columns: 1fr; gap: 15px; }
+            .news-card { padding: 18px; }
+            .news-card h3 { font-size: 1em; }
+            .refresh-btn { width: 50px; height: 50px; bottom: 20px; right: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link" onclick="if(window.parent !== window) { window.parent.showPage('home'); return false; }">← 홈으로</a>
+        
+        <header>
+            <h1>🏗️ 건설<span>뉴스</span></h1>
+            <p>한국 건설업계 최신 뉴스를 한눈에</p>
+        </header>
+        
+        <div class="news-sources">
+            <button class="source-btn active" data-source="all">전체</button>
+            <button class="source-btn" data-source="koscaj">대한전문건설신문</button>
+            <button class="source-btn" data-source="cnews">건설경제신문</button>
+            <button class="source-btn" data-source="constimes">건설타임즈</button>
+        </div>
+        
+        <div id="newsContainer" class="loading">뉴스를 불러오는 중...</div>
+    </div>
+    
+    <button class="refresh-btn" onclick="loadAllNews()" title="새로고침">🔄</button>
+
+    <script>
+        const RSS_SOURCES = {
+            koscaj: {
+                name: '대한전문건설신문',
+                url: 'https://www.koscaj.com/rss/allArticle.xml'
+            },
+            cnews: {
+                name: '건설경제신문',
+                url: 'https://www.cnews.co.kr/rss/allArticle.xml'
+            },
+            constimes: {
+                name: '건설타임즈',
+                url: 'https://www.constimes.co.kr/rss/allArticle.xml'
+            }
+        };
+
+        let currentSource = 'all';
+        let allNews = [];
+
+        // RSS 파싱 (CORS 우회용 프록시 사용)
+        async function fetchRSS(sourceKey) {
+            const source = RSS_SOURCES[sourceKey];
+            try {
+                // 직접 fetch 시도 (CORS 허용된 경우)
+                const response = await fetch(`/api/news?source=${sourceKey}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.items.map(item => ({ ...item, source: source.name, sourceKey }));
+                }
+            } catch (e) {
+                console.log(`${sourceKey} fetch failed:`, e);
+            }
+            return [];
+        }
+
+        async function loadAllNews() {
+            const container = document.getElementById('newsContainer');
+            container.innerHTML = '<div class="loading">뉴스를 불러오는 중...</div>';
+            
+            try {
+                const promises = Object.keys(RSS_SOURCES).map(key => fetchRSS(key));
+                const results = await Promise.all(promises);
+                allNews = results.flat();
+                
+                // 날짜순 정렬
+                allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+                
+                renderNews();
+            } catch (e) {
+                container.innerHTML = '<div class="error">뉴스를 불러오는데 실패했습니다.</div>';
+            }
+        }
+
+        function renderNews() {
+            const container = document.getElementById('newsContainer');
+            let news = currentSource === 'all' 
+                ? allNews 
+                : allNews.filter(n => n.sourceKey === currentSource);
+            
+            if (news.length === 0) {
+                container.innerHTML = '<div class="error">표시할 뉴스가 없습니다.</div>';
+                return;
+            }
+            
+            container.innerHTML = '<div class="news-grid">' + news.slice(0, 30).map(item => `
+                <article class="news-card">
+                    <h3><a href="${item.link}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a></h3>
+                    <p class="description">${escapeHtml(item.description || '')}</p>
+                    <div class="meta">
+                        <span class="source">${item.source}</span>
+                        <span class="date">${formatDate(item.pubDate)}</span>
+                    </div>
+                </article>
+            `).join('') + '</div>';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateStr) {
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        // 소스 필터 버튼
+        document.querySelectorAll('.source-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSource = btn.dataset.source;
+                renderNews();
+            });
+        });
+
+        // 페이지 로드 시 뉴스 불러오기
+        loadAllNews();
+    </script>
+</body>
+</html>

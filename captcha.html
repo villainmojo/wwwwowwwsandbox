@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인증 - SENGVIS Playground</title>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 { margin-bottom: 10px; font-size: 1.8em; }
+        p { margin-bottom: 30px; opacity: 0.8; }
+        .cf-turnstile { display: flex; justify-content: center; margin-bottom: 20px; }
+        .error { color: #ff6b6b; margin-top: 15px; display: none; }
+        .loading { display: none; margin-top: 15px; }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px; height: 20px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    
+        @media (max-width: 500px) {
+            .container { padding: 25px; margin: 15px; }
+            h1 { font-size: 1.4em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 보안 인증</h1>
+        <p>사이트 접속을 위해 아래 인증을 완료해주세요</p>
+        
+        <div class="cf-turnstile" 
+             data-sitekey="TURNSTILE_SITE_KEY_HERE" 
+             data-callback="onVerify"
+             data-theme="dark">
+        </div>
+        
+        <div class="loading">인증 확인 중...</div>
+        <div class="error">인증에 실패했습니다. 다시 시도해주세요.</div>
+    </div>
+
+    <script>
+        function onVerify(token) {
+            document.querySelector('.loading').style.display = 'block';
+            
+            fetch('/api/captcha/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    // 쿠키에 인증 토큰 저장 (24시간)
+                    document.cookie = `captcha_verified=${data.sessionToken}; path=/; max-age=86400; SameSite=Strict`;
+                    // 원래 가려던 페이지로 이동
+                    const redirect = new URLSearchParams(window.location.search).get('redirect') || '/';
+                    window.location.href = redirect;
+                } else {
+                    document.querySelector('.loading').style.display = 'none';
+                    document.querySelector('.error').style.display = 'block';
+                    turnstile.reset();
+                }
+            })
+            .catch(() => {
+                document.querySelector('.loading').style.display = 'none';
+                document.querySelector('.error').style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>

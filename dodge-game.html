@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Dodge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d1b2a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            width: 600px;
+            padding: 15px 25px;
+            background: rgba(13, 27, 42, 0.9);
+            border-radius: 15px;
+            border: 1px solid rgba(65, 105, 225, 0.3);
+            box-shadow: 0 0 30px rgba(65, 105, 225, 0.2);
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-label {
+            color: #6b7b8c;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .stat-value {
+            color: #e0e6ed;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(65, 105, 225, 0.5);
+        }
+
+        .lives {
+            display: flex;
+            gap: 8px;
+        }
+
+        .heart {
+            width: 24px;
+            height: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .heart.active {
+            filter: drop-shadow(0 0 8px #ff6b6b);
+        }
+
+        .heart.inactive {
+            opacity: 0.2;
+        }
+
+        #gameCanvas {
+            border-radius: 15px;
+            border: 2px solid rgba(65, 105, 225, 0.4);
+            box-shadow: 0 0 50px rgba(65, 105, 225, 0.3),
+                        inset 0 0 100px rgba(13, 27, 42, 0.5);
+            cursor: none;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            z-index: 10;
+        }
+
+        .game-title {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #4169e1 0%, #00d4ff 50%, #4169e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            filter: drop-shadow(0 0 30px rgba(65, 105, 225, 0.5));
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 30px rgba(65, 105, 225, 0.5)); }
+            50% { filter: drop-shadow(0 0 50px rgba(0, 212, 255, 0.8)); }
+        }
+
+        .subtitle {
+            color: #6b7b8c;
+            font-size: 14px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .start-btn {
+            padding: 18px 60px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #e0e6ed;
+            background: linear-gradient(135deg, #1a3a5c 0%, #2d5a87 100%);
+            border: 2px solid rgba(65, 105, 225, 0.5);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            box-shadow: 0 0 30px rgba(65, 105, 225, 0.3);
+        }
+
+        .start-btn:hover {
+            background: linear-gradient(135deg, #2d5a87 0%, #4169e1 100%);
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(65, 105, 225, 0.5);
+        }
+
+        .controls-info {
+            color: #4a5a6a;
+            font-size: 12px;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        .controls-info span {
+            color: #6b8bb8;
+            padding: 3px 8px;
+            background: rgba(65, 105, 225, 0.1);
+            border-radius: 5px;
+            margin: 0 3px;
+        }
+
+        .game-over-screen {
+            background: rgba(10, 10, 26, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 107, 107, 0.3);
+            box-shadow: 0 0 50px rgba(255, 107, 107, 0.2);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .game-over-title {
+            font-size: 32px;
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+
+        .final-score {
+            font-size: 42px;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .high-score {
+            font-size: 14px;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+        
+        .new-record {
+            color: #50fa7b;
+            font-size: 18px;
+            margin-bottom: 15px;
+            animation: pulse 0.5s ease infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { opacity: 0.7; transform: scale(1); }
+            to { opacity: 1; transform: scale(1.05); }
+        }
+        
+        .name-input-section {
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .name-input-section.show { display: block; }
+        
+        .name-input {
+            width: 200px;
+            padding: 12px 15px;
+            font-size: 18px;
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            text-transform: uppercase;
+        }
+        
+        .name-input::placeholder { color: #666; }
+        
+        .submit-score-btn {
+            margin-top: 10px;
+            padding: 10px 30px;
+            font-size: 14px;
+            background: linear-gradient(135deg, #00d4ff, #4169e1);
+            border: none;
+            border-radius: 25px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .leaderboard {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .leaderboard h3 {
+            color: #ffd700;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .leaderboard-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .lb-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 15px;
+            margin: 3px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        
+        .lb-item.highlight {
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .lb-rank { color: #888; width: 30px; }
+        .lb-rank.gold { color: #ffd700; }
+        .lb-rank.silver { color: #c0c0c0; }
+        .lb-rank.bronze { color: #cd7f32; }
+        .lb-name { flex: 1; color: #e0e6ed; }
+        .lb-score { color: #00d4ff; font-weight: bold; }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+
+        .level-indicator {
+            color: #ffd700;
+            font-size: 14px;
+        }
+    
+        @media (max-width: 768px) {
+            .game-container { padding: 10px; }
+            canvas { max-width: 100%; height: auto !important; }
+            .controls { flex-wrap: wrap; gap: 10px; }
+            .control-btn { padding: 12px 20px; font-size: 14px; }
+            .score-display { font-size: 16px; }
+            .mobile-controls { display: flex !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="stat">
+                <span class="stat-label">Score</span>
+                <span class="stat-value" id="score">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Lives</span>
+                <div class="lives" id="lives"></div>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Level</span>
+                <span class="stat-value level-indicator" id="level">1</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">High Score</span>
+                <span class="stat-value" id="highScore">0</span>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+        <div class="overlay" id="startScreen">
+            <div class="game-title">NEON DODGE</div>
+            <div class="subtitle">Survive the chaos</div>
+            <button class="start-btn" id="startBtn">Start Game</button>
+            <div class="controls-info">
+                <span>↑ ↓ ← →</span> or <span>W A S D</span> to move<br>
+                <span>Mouse</span> drag to control
+            </div>
+        </div>
+
+        <div class="overlay hidden" id="gameOverScreen">
+            <div class="game-over-screen">
+                <div class="game-over-title">GAME OVER</div>
+                <div class="final-score" id="finalScore">0</div>
+                <div class="high-score" id="highScoreText">High Score: 0</div>
+                <div class="new-record hidden" id="newRecordText">🏆 TOP 10 진입!</div>
+                
+                <div class="name-input-section" id="nameInputSection">
+                    <input type="text" class="name-input" id="playerNameInput" placeholder="이름 입력" maxlength="10">
+                    <br>
+                    <button class="submit-score-btn" id="submitScoreBtn">등록하기</button>
+                </div>
+                
+                <div class="leaderboard" id="leaderboard">
+                    <h3>🏆 LEADERBOARD</h3>
+                    <div class="leaderboard-list" id="leaderboardList">
+                        로딩 중...
+                    </div>
+                </div>
+                
+                <button class="start-btn" id="restartBtn" style="margin-top: 20px;">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        
+        // Game state
+        let gameRunning = false;
+        let score = 0;
+        let lives = 3;
+        let maxLives = 6;
+        let highScore = localStorage.getItem('neonDodgeHighScore') || 0;
+        let gameTime = 0;
+        let level = 1;
+
+        // Player
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 15,
+            color: '#00d4ff',
+            glowColor: 'rgba(0, 212, 255, 0.5)',
+            speed: 5,
+            trail: []
+        };
+
+        // Bullets - now spawn from all edges going through center
+        let bullets = [];
+        let baseBulletCount = 3;  // Starting bullets per wave
+        let bulletSpeed = 4;
+        let spawnInterval = 80;  // Frames between spawns
+
+        // Power-ups
+        let powerUps = [];
+        let powerUpSpawnRate = 600;
+
+        // Input
+        const keys = {};
+        let mousePos = null;
+        let isDragging = false;
+
+        // Particles
+        let particles = [];
+
+        // Initialize
+        document.getElementById('highScore').textContent = highScore;
+
+        // Heart SVG
+        const heartSVG = `<svg viewBox="0 0 24 24" class="heart"><path fill="#ff6b6b" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+
+        function updateLivesDisplay() {
+            const livesContainer = document.getElementById('lives');
+            livesContainer.innerHTML = '';
+            for (let i = 0; i < maxLives; i++) {
+                const heart = document.createElement('div');
+                heart.innerHTML = heartSVG;
+                heart.querySelector('svg').classList.add(i < lives ? 'active' : 'inactive');
+                livesContainer.appendChild(heart);
+            }
+        }
+
+        function spawnBulletWave() {
+            // Calculate bullets for current level
+            const bulletCount = baseBulletCount + Math.floor(level * 1.5);
+            
+            // Spawn from all 4 edges
+            const edges = ['top', 'bottom', 'left', 'right'];
+            
+            for (let i = 0; i < bulletCount; i++) {
+                const edge = edges[Math.floor(Math.random() * edges.length)];
+                let x, y, vx, vy;
+                
+                // Random offset from center for variety
+                const offsetX = (Math.random() - 0.5) * 100;
+                const offsetY = (Math.random() - 0.5) * 100;
+                const targetX = centerX + offsetX;
+                const targetY = centerY + offsetY;
+                
+                switch(edge) {
+                    case 'top':
+                        x = Math.random() * canvas.width;
+                        y = -20;
+                        break;
+                    case 'bottom':
+                        x = Math.random() * canvas.width;
+                        y = canvas.height + 20;
+                        break;
+                    case 'left':
+                        x = -20;
+                        y = Math.random() * canvas.height;
+                        break;
+                    case 'right':
+                        x = canvas.width + 20;
+                        y = Math.random() * canvas.height;
+                        break;
+                }
+                
+                // Calculate velocity toward center (and beyond)
+                const angle = Math.atan2(targetY - y, targetX - x);
+                const speed = bulletSpeed + Math.random() * 1.5;
+                vx = Math.cos(angle) * speed;
+                vy = Math.sin(angle) * speed;
+                
+                bullets.push({
+                    x: x,
+                    y: y,
+                    vx: vx,
+                    vy: vy,
+                    radius: 6 + Math.random() * 4,
+                    color: `hsl(${Math.random() * 60 + 240}, 80%, 60%)`
+                });
+            }
+        }
+
+        function spawnPowerUp() {
+            const edge = Math.floor(Math.random() * 4);
+            let x, y, vx, vy;
+            const speed = 1.5;
+            
+            switch(edge) {
+                case 0: // top
+                    x = Math.random() * canvas.width;
+                    y = -20;
+                    vx = 0;
+                    vy = speed;
+                    break;
+                case 1: // bottom
+                    x = Math.random() * canvas.width;
+                    y = canvas.height + 20;
+                    vx = 0;
+                    vy = -speed;
+                    break;
+                case 2: // left
+                    x = -20;
+                    y = Math.random() * canvas.height;
+                    vx = speed;
+                    vy = 0;
+                    break;
+                case 3: // right
+                    x = canvas.width + 20;
+                    y = Math.random() * canvas.height;
+                    vx = -speed;
+                    vy = 0;
+                    break;
+            }
+            
+            powerUps.push({
+                x: x,
+                y: y,
+                vx: vx,
+                vy: vy,
+                radius: 15,
+                type: 'life',
+                pulse: 0
+            });
+        }
+
+        function createParticles(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    radius: Math.random() * 4 + 2,
+                    color: color,
+                    life: 1
+                });
+            }
+        }
+
+        function updatePlayer() {
+            // Keyboard input
+            if (keys['ArrowLeft'] || keys['KeyA']) player.x -= player.speed;
+            if (keys['ArrowRight'] || keys['KeyD']) player.x += player.speed;
+            if (keys['ArrowUp'] || keys['KeyW']) player.y -= player.speed;
+            if (keys['ArrowDown'] || keys['KeyS']) player.y += player.speed;
+
+            // Mouse input
+            if (isDragging && mousePos) {
+                const dx = mousePos.x - player.x;
+                const dy = mousePos.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 5) {
+                    player.x += (dx / dist) * player.speed * 1.2;
+                    player.y += (dy / dist) * player.speed * 1.2;
+                }
+            }
+
+            // Bounds
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+
+            // Trail
+            player.trail.unshift({ x: player.x, y: player.y });
+            if (player.trail.length > 15) player.trail.pop();
+        }
+
+        function updateBullets() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                
+                // Move in straight line
+                bullet.x += bullet.vx;
+                bullet.y += bullet.vy;
+
+                // Remove if completely off screen (after passing through)
+                if (bullet.x < -50 || bullet.x > canvas.width + 50 ||
+                    bullet.y < -50 || bullet.y > canvas.height + 50) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+
+                // Collision with player
+                const dx = bullet.x - player.x;
+                const dy = bullet.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < bullet.radius + player.radius - 3) {
+                    bullets.splice(i, 1);
+                    lives--;
+                    updateLivesDisplay();
+                    createParticles(player.x, player.y, '#ff6b6b', 20);
+                    
+                    if (lives <= 0) {
+                        gameOver();
+                    }
+                }
+            }
+        }
+
+        function updatePowerUps() {
+            for (let i = powerUps.length - 1; i >= 0; i--) {
+                const powerUp = powerUps[i];
+                
+                powerUp.x += powerUp.vx;
+                powerUp.y += powerUp.vy;
+                powerUp.pulse += 0.1;
+
+                // Remove if off screen
+                if (powerUp.x < -50 || powerUp.x > canvas.width + 50 ||
+                    powerUp.y < -50 || powerUp.y > canvas.height + 50) {
+                    powerUps.splice(i, 1);
+                    continue;
+                }
+
+                // Collision with player
+                const dx = powerUp.x - player.x;
+                const dy = powerUp.y - player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < powerUp.radius + player.radius) {
+                    powerUps.splice(i, 1);
+                    if (lives < maxLives) {
+                        lives++;
+                        updateLivesDisplay();
+                    }
+                    createParticles(powerUp.x, powerUp.y, '#50fa7b', 15);
+                }
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vx *= 0.95;
+                particle.vy *= 0.95;
+                particle.life -= 0.02;
+
+                if (particle.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawPlayer() {
+            // Trail
+            player.trail.forEach((pos, i) => {
+                const alpha = (1 - i / player.trail.length) * 0.3;
+                const radius = player.radius * (1 - i / player.trail.length);
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 212, 255, ${alpha})`;
+                ctx.fill();
+            });
+
+            // Glow
+            const gradient = ctx.createRadialGradient(
+                player.x, player.y, 0,
+                player.x, player.y, player.radius * 2
+            );
+            gradient.addColorStop(0, 'rgba(0, 212, 255, 0.4)');
+            gradient.addColorStop(1, 'rgba(0, 212, 255, 0)');
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius * 2, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Player
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fillStyle = player.color;
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Inner circle
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius * 0.4, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+        }
+
+        function drawBullets() {
+            bullets.forEach(bullet => {
+                // Glow
+                const gradient = ctx.createRadialGradient(
+                    bullet.x, bullet.y, 0,
+                    bullet.x, bullet.y, bullet.radius * 2
+                );
+                gradient.addColorStop(0, bullet.color);
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.radius * 2, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // Bullet
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+                ctx.fillStyle = bullet.color;
+                ctx.fill();
+            });
+        }
+
+        function drawPowerUps() {
+            powerUps.forEach(powerUp => {
+                const pulseRadius = powerUp.radius + Math.sin(powerUp.pulse) * 3;
+                
+                // Glow
+                const gradient = ctx.createRadialGradient(
+                    powerUp.x, powerUp.y, 0,
+                    powerUp.x, powerUp.y, pulseRadius * 2.5
+                );
+                gradient.addColorStop(0, 'rgba(80, 250, 123, 0.6)');
+                gradient.addColorStop(1, 'rgba(80, 250, 123, 0)');
+                ctx.beginPath();
+                ctx.arc(powerUp.x, powerUp.y, pulseRadius * 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // Heart shape
+                ctx.save();
+                ctx.translate(powerUp.x, powerUp.y);
+                ctx.scale(pulseRadius / 15, pulseRadius / 15);
+                ctx.beginPath();
+                ctx.moveTo(0, -5);
+                ctx.bezierCurveTo(-10, -15, -20, 0, 0, 15);
+                ctx.bezierCurveTo(20, 0, 10, -15, 0, -5);
+                ctx.fillStyle = '#50fa7b';
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            });
+        }
+
+        function drawParticles() {
+            particles.forEach(particle => {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.radius * particle.life, 0, Math.PI * 2);
+                const alpha = particle.life;
+                ctx.fillStyle = particle.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba').replace('#ff6b6b', `rgba(255, 107, 107, ${alpha})`).replace('#50fa7b', `rgba(80, 250, 123, ${alpha})`);
+                ctx.fill();
+            });
+        }
+
+        function drawBackground() {
+            // Grid
+            ctx.strokeStyle = 'rgba(65, 105, 225, 0.08)';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x < canvas.width; x += 30) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y < canvas.height; y += 30) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Center crosshair (subtle)
+            ctx.strokeStyle = 'rgba(65, 105, 225, 0.15)';
+            ctx.beginPath();
+            ctx.moveTo(centerX - 30, centerY);
+            ctx.lineTo(centerX + 30, centerY);
+            ctx.moveTo(centerX, centerY - 30);
+            ctx.lineTo(centerX, centerY + 30);
+            ctx.stroke();
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            // Clear
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawBackground();
+
+            // Update
+            gameTime++;
+            score = Math.floor(gameTime / 6);
+            document.getElementById('score').textContent = score;
+
+            // Level up every 10 seconds (600 frames at 60fps)
+            const newLevel = Math.floor(gameTime / 600) + 1;
+            if (newLevel !== level) {
+                level = newLevel;
+                document.getElementById('level').textContent = level;
+                // Increase spawn rate and bullet speed with level
+                spawnInterval = Math.max(30, 80 - level * 5);
+                bulletSpeed = 4 + level * 0.3;
+            }
+
+            // Spawn bullet waves
+            if (gameTime % spawnInterval === 0) {
+                spawnBulletWave();
+            }
+
+            // Spawn power-ups
+            if (gameTime % powerUpSpawnRate === 0) {
+                spawnPowerUp();
+            }
+
+            updatePlayer();
+            updateBullets();
+            updatePowerUps();
+            updateParticles();
+
+            drawParticles();
+            drawBullets();
+            drawPowerUps();
+            drawPlayer();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            lives = 3;
+            gameTime = 0;
+            level = 1;
+            bullets = [];
+            powerUps = [];
+            particles = [];
+            spawnInterval = 80;
+            bulletSpeed = 4;
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            player.trail = [];
+            
+            document.getElementById('level').textContent = '1';
+            updateLivesDisplay();
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            
+            gameLoop();
+        }
+
+        let currentScores = [];
+        let pendingScore = 0;
+        
+        async function loadLeaderboard() {
+            try {
+                const res = await fetch('/api/dodge/scores');
+                const data = await res.json();
+                if (data.success) {
+                    currentScores = data.scores;
+                    renderLeaderboard();
+                }
+            } catch (e) {
+                console.error('Failed to load leaderboard:', e);
+            }
+        }
+        
+        function renderLeaderboard(highlightScore = null) {
+            const list = document.getElementById('leaderboardList');
+            if (currentScores.length === 0) {
+                list.innerHTML = '<div style="color: #666; padding: 20px;">아직 기록이 없습니다</div>';
+                return;
+            }
+            list.innerHTML = currentScores.slice(0, 10).map((s, i) => {
+                const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+                const highlight = highlightScore && s.score === highlightScore ? 'highlight' : '';
+                return `
+                    <div class="lb-item ${highlight}">
+                        <span class="lb-rank ${rankClass}">${i + 1}</span>
+                        <span class="lb-name">${escapeHtml(s.name)}</span>
+                        <span class="lb-score">${s.score.toLocaleString()}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function isTop10(score) {
+            if (currentScores.length < 10) return true;
+            return score > currentScores[9].score;
+        }
+        
+        async function submitScore(name, score) {
+            try {
+                const res = await fetch('/api/dodge/scores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, score })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentScores = data.scores;
+                    renderLeaderboard(score);
+                }
+            } catch (e) {
+                console.error('Failed to submit score:', e);
+            }
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('neonDodgeHighScore', highScore);
+                document.getElementById('highScore').textContent = highScore;
+            }
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('highScoreText').textContent = `High Score: ${highScore}`;
+            
+            // TOP 10 체크
+            pendingScore = score;
+            const nameSection = document.getElementById('nameInputSection');
+            const newRecordText = document.getElementById('newRecordText');
+            
+            if (isTop10(score)) {
+                nameSection.classList.add('show');
+                newRecordText.classList.remove('hidden');
+                document.getElementById('playerNameInput').value = '';
+                document.getElementById('playerNameInput').focus();
+            } else {
+                nameSection.classList.remove('show');
+                newRecordText.classList.add('hidden');
+            }
+            
+            renderLeaderboard();
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+        }
+
+        // Event listeners
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('restartBtn').addEventListener('click', startGame);
+        
+        document.getElementById('submitScoreBtn').addEventListener('click', async () => {
+            const name = document.getElementById('playerNameInput').value.trim() || '익명';
+            await submitScore(name, pendingScore);
+            document.getElementById('nameInputSection').classList.remove('show');
+            document.getElementById('newRecordText').classList.add('hidden');
+        });
+        
+        document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('submitScoreBtn').click();
+            }
+        });
+        
+        // 초기 랭킹 로드
+        loadLeaderboard();
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            const rect = canvas.getBoundingClientRect();
+            mousePos = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mousePos = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            mousePos = {
+                x: touch.clientX - rect.left,
+                y: touch.clientY - rect.top
+            };
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            mousePos = {
+                x: touch.clientX - rect.left,
+                y: touch.clientY - rect.top
+            };
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        // Initialize lives display
+        updateLivesDisplay();
+    </script>
+</body>
+</html>

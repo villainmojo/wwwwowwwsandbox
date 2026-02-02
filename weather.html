@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>날씨 예보 - Seungil Playground</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e0e6ed;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .back-link { color: #6b8bb8; text-decoration: none; font-size: 14px; }
+        .back-link:hover { color: #00d4ff; }
+        
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #0099ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .search-input {
+            flex: 1;
+            max-width: 400px;
+            padding: 15px 20px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: white;
+            outline: none;
+        }
+        
+        .search-input:focus { border-color: #00d4ff; }
+        
+        .search-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #00d4ff, #0099ff);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .current-weather {
+            background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,153,255,0.1));
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .current-main {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .weather-icon {
+            font-size: 80px;
+            filter: drop-shadow(0 0 20px rgba(0,212,255,0.5));
+        }
+        
+        .current-temp {
+            font-size: 72px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #fff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .current-info h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .current-info p {
+            color: #8a9bae;
+            font-size: 14px;
+        }
+        
+        .current-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .detail-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .detail-label { font-size: 12px; color: #6b8bb8; margin-bottom: 5px; }
+        .detail-value { font-size: 18px; font-weight: bold; }
+        
+        .forecast-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+        
+        .hourly-forecast {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 15px;
+        }
+        
+        .hourly-item {
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px 25px;
+            text-align: center;
+            min-width: 100px;
+        }
+        
+        .hourly-time { font-size: 14px; color: #8a9bae; margin-bottom: 10px; }
+        .hourly-icon { font-size: 32px; margin-bottom: 10px; }
+        .hourly-temp { font-size: 20px; font-weight: bold; }
+        
+        .daily-forecast {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .daily-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .daily-day { font-size: 14px; color: #8a9bae; margin-bottom: 10px; }
+        .daily-icon { font-size: 36px; margin-bottom: 10px; }
+        .daily-temps { font-size: 16px; }
+        .daily-high { color: #ff6b6b; }
+        .daily-low { color: #00d4ff; }
+        
+        .loading { text-align: center; padding: 50px; color: #8a9bae; }
+        
+        @media (max-width: 768px) {
+            .current-weather { padding: 25px; }
+            .current-temp { font-size: 48px; }
+            .weather-icon { font-size: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link" onclick="if(window.parent !== window) { window.parent.showPage('home'); return false; }">← 홈으로</a>
+            <h1 class="title">🌤️ 날씨 예보</h1>
+            <div></div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" class="search-input" id="cityInput" placeholder="도시명 입력 (예: Seoul, Tokyo)" value="Seoul">
+            <button class="search-btn" onclick="searchWeather()">검색</button>
+        </div>
+        
+        <div id="weatherContent">
+            <div class="loading">🔄 날씨 정보를 불러오는 중...</div>
+        </div>
+    </div>
+
+    <script>
+        const weatherIcons = {
+            0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+            45: '🌫️', 48: '🌫️',
+            51: '🌧️', 53: '🌧️', 55: '🌧️',
+            61: '🌧️', 63: '🌧️', 65: '🌧️',
+            71: '❄️', 73: '❄️', 75: '❄️',
+            80: '🌧️', 81: '🌧️', 82: '🌧️',
+            95: '⛈️', 96: '⛈️', 99: '⛈️'
+        };
+        
+        const weatherDesc = {
+            0: '맑음', 1: '대체로 맑음', 2: '구름 조금', 3: '흐림',
+            45: '안개', 48: '안개',
+            51: '이슬비', 53: '이슬비', 55: '이슬비',
+            61: '비', 63: '비', 65: '폭우',
+            71: '눈', 73: '눈', 75: '폭설',
+            80: '소나기', 81: '소나기', 82: '폭우',
+            95: '뇌우', 96: '뇌우', 99: '뇌우'
+        };
+
+        const cities = {
+            'seoul': { lat: 37.5665, lon: 126.9780, name: '서울' },
+            'busan': { lat: 35.1796, lon: 129.0756, name: '부산' },
+            'tokyo': { lat: 35.6762, lon: 139.6503, name: '도쿄' },
+            'osaka': { lat: 34.6937, lon: 135.5023, name: '오사카' },
+            'new york': { lat: 40.7128, lon: -74.0060, name: '뉴욕' },
+            'london': { lat: 51.5074, lon: -0.1278, name: '런던' },
+            'paris': { lat: 48.8566, lon: 2.3522, name: '파리' }
+        };
+
+        async function searchWeather() {
+            const city = document.getElementById('cityInput').value.trim().toLowerCase();
+            const cityData = cities[city] || cities['seoul'];
+            await loadWeather(cityData.lat, cityData.lon, cityData.name || city);
+        }
+
+        async function loadWeather(lat, lon, cityName) {
+            document.getElementById('weatherContent').innerHTML = '<div class="loading">🔄 날씨 정보를 불러오는 중...</div>';
+            
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto&forecast_days=7`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                displayWeather(data, cityName);
+            } catch (e) {
+                document.getElementById('weatherContent').innerHTML = '<div class="loading">날씨 정보를 불러올 수 없습니다 😢</div>';
+            }
+        }
+
+        function displayWeather(data, cityName) {
+            const current = data.current;
+            const hourly = data.hourly;
+            const daily = data.daily;
+            
+            const icon = weatherIcons[current.weather_code] || '🌤️';
+            const desc = weatherDesc[current.weather_code] || '맑음';
+            
+            let html = `
+                <div class="current-weather">
+                    <div class="current-main">
+                        <div class="weather-icon">${icon}</div>
+                        <div>
+                            <div class="current-temp">${Math.round(current.temperature_2m)}°</div>
+                            <div class="current-info">
+                                <h2>${cityName}</h2>
+                                <p>${desc}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="current-details">
+                        <div class="detail-item">
+                            <div class="detail-label">체감 온도</div>
+                            <div class="detail-value">${Math.round(current.temperature_2m)}°</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">습도</div>
+                            <div class="detail-value">${current.relative_humidity_2m}%</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">풍속</div>
+                            <div class="detail-value">${current.wind_speed_10m} km/h</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">일출/일몰</div>
+                            <div class="detail-value">${daily.sunrise[0].slice(11)} / ${daily.sunset[0].slice(11)}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="forecast-section">
+                    <h3 class="section-title">⏰ 시간별 예보</h3>
+                    <div class="hourly-forecast">
+            `;
+            
+            const now = new Date();
+            const currentHour = now.getHours();
+            for (let i = 0; i < 24; i++) {
+                const idx = currentHour + i;
+                if (idx >= hourly.time.length) break;
+                const time = new Date(hourly.time[idx]);
+                const hourIcon = weatherIcons[hourly.weather_code[idx]] || '🌤️';
+                html += `
+                    <div class="hourly-item">
+                        <div class="hourly-time">${time.getHours()}시</div>
+                        <div class="hourly-icon">${hourIcon}</div>
+                        <div class="hourly-temp">${Math.round(hourly.temperature_2m[idx])}°</div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                    </div>
+                </div>
+                
+                <div class="forecast-section">
+                    <h3 class="section-title">📅 주간 예보</h3>
+                    <div class="daily-forecast">
+            `;
+            
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            for (let i = 0; i < daily.time.length; i++) {
+                const date = new Date(daily.time[i]);
+                const dayIcon = weatherIcons[daily.weather_code[i]] || '🌤️';
+                const dayName = i === 0 ? '오늘' : i === 1 ? '내일' : days[date.getDay()] + '요일';
+                html += `
+                    <div class="daily-item">
+                        <div class="daily-day">${dayName}</div>
+                        <div class="daily-icon">${dayIcon}</div>
+                        <div class="daily-temps">
+                            <span class="daily-high">${Math.round(daily.temperature_2m_max[i])}°</span>
+                            <span class="daily-low">${Math.round(daily.temperature_2m_min[i])}°</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div></div>';
+            document.getElementById('weatherContent').innerHTML = html;
+        }
+
+        // Load Seoul weather on start
+        searchWeather();
+        
+        document.getElementById('cityInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') searchWeather();
+        });
+    </script>
+</body>
+</html>

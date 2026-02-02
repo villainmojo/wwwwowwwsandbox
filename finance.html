@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융 정보 - Seungil Playground</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
+            min-height: 100vh;
+            color: #e6edf3;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .back-link { color: #58a6ff; text-decoration: none; font-size: 14px; }
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .update-time { font-size: 12px; color: #8b949e; }
+        
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .market-card {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,170,0,0.05));
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 20px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .market-card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 100px; height: 100px;
+            background: radial-gradient(circle, rgba(255,215,0,0.1), transparent);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .card-icon { font-size: 40px; }
+        .card-label { font-size: 14px; color: #8b949e; }
+        .card-name { font-size: 18px; font-weight: bold; margin-top: 5px; }
+        
+        .card-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .card-change.up { background: rgba(63,185,80,0.2); color: #3fb950; }
+        .card-change.down { background: rgba(248,81,73,0.2); color: #f85149; }
+        .card-change.neutral { background: rgba(139,148,158,0.2); color: #8b949e; }
+        
+        .news-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            margin-bottom: 25px;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .news-list { display: flex; flex-direction: column; gap: 15px; }
+        
+        .news-item {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .news-item:hover {
+            background: rgba(255,215,0,0.05);
+            border-color: rgba(255,215,0,0.2);
+            transform: translateX(5px);
+        }
+        
+        .news-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .news-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #8b949e;
+        }
+        
+        .news-source { color: #58a6ff; }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #8b949e;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .card-value { font-size: 28px; }
+            .market-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-link" onclick="if(window.parent !== window) { window.parent.showPage('home'); return false; }">← 홈으로</a>
+            <h1 class="title">💰 금융 정보</h1>
+            <button class="refresh-btn" onclick="loadAllData()">🔄 새로고침</button>
+        </div>
+        
+        <div class="update-time" id="updateTime"></div>
+        
+        <div class="market-grid" id="marketGrid">
+            <div class="loading">📊 금융 데이터를 불러오는 중...</div>
+        </div>
+        
+        <div class="news-section">
+            <h2 class="section-title">📰 주요 금융 뉴스</h2>
+            <div class="news-list" id="newsList">
+                <div class="loading">뉴스를 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadAllData() {
+            document.getElementById('updateTime').textContent = `마지막 업데이트: ${new Date().toLocaleString('ko-KR')}`;
+            await Promise.all([loadMarketData(), loadNews()]);
+        }
+
+        async function loadMarketData() {
+            const grid = document.getElementById('marketGrid');
+            grid.innerHTML = '<div class="loading">📊 금융 데이터를 불러오는 중...</div>';
+            
+            try {
+                // Fetch USD/KRW from exchangerate-api (free)
+                const forexRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                const forexData = await forexRes.json();
+                const usdKrw = forexData.rates.KRW;
+                
+                // Simulated data for demo (in production, use real APIs)
+                const marketData = [
+                    {
+                        icon: '💵',
+                        label: '환율',
+                        name: 'USD/KRW',
+                        value: usdKrw.toFixed(2),
+                        change: ((Math.random() - 0.5) * 20).toFixed(2),
+                        unit: '원'
+                    },
+                    {
+                        icon: '🥇',
+                        label: '금 시세',
+                        name: 'Gold',
+                        value: (2650 + Math.random() * 50).toFixed(2),
+                        change: ((Math.random() - 0.5) * 30).toFixed(2),
+                        unit: 'USD/oz'
+                    },
+                    {
+                        icon: '📈',
+                        label: '코스피',
+                        name: 'KOSPI',
+                        value: (2450 + Math.random() * 50).toFixed(2),
+                        change: ((Math.random() - 0.5) * 40).toFixed(2),
+                        unit: ''
+                    },
+                    {
+                        icon: '📊',
+                        label: '코스닥',
+                        name: 'KOSDAQ',
+                        value: (720 + Math.random() * 20).toFixed(2),
+                        change: ((Math.random() - 0.5) * 15).toFixed(2),
+                        unit: ''
+                    },
+                    {
+                        icon: '🇯🇵',
+                        label: '환율',
+                        name: 'JPY/KRW',
+                        value: (forexData.rates.KRW / forexData.rates.JPY * 100).toFixed(2),
+                        change: ((Math.random() - 0.5) * 5).toFixed(2),
+                        unit: '원/100엔'
+                    },
+                    {
+                        icon: '₿',
+                        label: '비트코인',
+                        name: 'BTC/USD',
+                        value: (102000 + Math.random() * 3000).toFixed(0),
+                        change: ((Math.random() - 0.5) * 2000).toFixed(0),
+                        unit: 'USD'
+                    }
+                ];
+                
+                grid.innerHTML = marketData.map(item => {
+                    const changeNum = parseFloat(item.change);
+                    const changeClass = changeNum > 0 ? 'up' : changeNum < 0 ? 'down' : 'neutral';
+                    const changeSymbol = changeNum > 0 ? '▲' : changeNum < 0 ? '▼' : '';
+                    
+                    return `
+                        <div class="market-card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-label">${item.label}</div>
+                                    <div class="card-name">${item.name}</div>
+                                </div>
+                                <div class="card-icon">${item.icon}</div>
+                            </div>
+                            <div class="card-value">${Number(item.value).toLocaleString()} ${item.unit}</div>
+                            <span class="card-change ${changeClass}">
+                                ${changeSymbol} ${Math.abs(changeNum).toLocaleString()}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = '<div class="loading">데이터를 불러올 수 없습니다 😢</div>';
+            }
+        }
+
+        async function loadNews() {
+            const newsList = document.getElementById('newsList');
+            
+            // Simulated news (in production, use news API)
+            const news = [
+                { title: '美 연준, 금리 동결 결정..."인플레이션 추가 완화 필요"', source: '연합뉴스', time: '1시간 전' },
+                { title: '원/달러 환율 1,450원대 안착...수출 기업 희비 엇갈려', source: '한국경제', time: '2시간 전' },
+                { title: '코스피, 외국인 매수세에 2,500선 돌파 눈앞', source: '매일경제', time: '3시간 전' },
+                { title: '금값, 안전자산 선호에 사상 최고가 경신', source: '서울경제', time: '4시간 전' },
+                { title: '비트코인, 기관 투자 확대에 10만 달러 재돌파', source: 'Bloomberg', time: '5시간 전' },
+                { title: '삼성전자, AI 반도체 수요 급증에 실적 개선 전망', source: '조선비즈', time: '6시간 전' },
+                { title: '유가, 중동 긴장 완화에 하락세...배럴당 75달러', source: 'Reuters', time: '7시간 전' },
+            ];
+            
+            newsList.innerHTML = news.map(item => `
+                <div class="news-item">
+                    <div class="news-title">${item.title}</div>
+                    <div class="news-meta">
+                        <span class="news-source">${item.source}</span>
+                        <span>${item.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        loadAllData();
+        
+        // Auto refresh every 5 minutes
+        setInterval(loadAllData, 5 * 60 * 1000);
+    </script>
+</body>
+</html>

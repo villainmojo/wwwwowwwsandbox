@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEUNGIL Playground V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --theme-primary: #7c3aed;
+            --theme-secondary: #f472b6;
+            --theme-accent: #fbbf24;
+            --theme-bg: #fefefe;
+            --theme-text: #1e1b4b;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--theme-bg);
+            color: var(--theme-text);
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        /* Cursor */
+        .cursor {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--theme-primary);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.15s ease-out;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+        .cursor-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--theme-secondary);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px var(--theme-secondary);
+        }
+        .cursor.hover {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Floating Objects in Hero */
+        .hero-objects {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .floating-obj {
+            position: absolute;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation: morphFloat 15s ease-in-out infinite;
+            opacity: 0.7;
+        }
+
+        .obj-1 {
+            width: 300px; height: 300px;
+            background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+            top: 10%; right: 10%;
+            animation-delay: 0s;
+        }
+        .obj-2 {
+            width: 200px; height: 200px;
+            background: linear-gradient(135deg, var(--theme-accent), var(--theme-secondary));
+            top: 60%; left: 5%;
+            animation-delay: -5s;
+        }
+        .obj-3 {
+            width: 150px; height: 150px;
+            background: linear-gradient(135deg, var(--theme-secondary), var(--theme-primary));
+            top: 20%; left: 15%;
+            animation-delay: -10s;
+        }
+        .obj-4 {
+            width: 100px; height: 100px;
+            background: var(--theme-accent);
+            bottom: 20%; right: 15%;
+            animation-delay: -7s;
+            border-radius: 50%;
+        }
+        .obj-5 {
+            width: 80px; height: 80px;
+            background: var(--theme-primary);
+            top: 50%; right: 25%;
+            animation-delay: -3s;
+            border-radius: 20px;
+            transform: rotate(45deg);
+        }
+
+        @keyframes morphFloat {
+            0%, 100% { 
+                border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+            25% { 
+                border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%;
+                transform: translate(20px, -30px) rotate(10deg) scale(1.05);
+            }
+            50% { 
+                border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%;
+                transform: translate(-20px, 20px) rotate(-5deg) scale(0.95);
+            }
+            75% { 
+                border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%;
+                transform: translate(10px, 10px) rotate(5deg) scale(1.02);
+            }
+        }
+
+        /* Hero emoji floaters */
+        .emoji-float {
+            position: absolute;
+            font-size: 3em;
+            animation: emojiFloat 20s ease-in-out infinite;
+            opacity: 0.8;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+        }
+        .emoji-1 { top: 15%; left: 8%; animation-delay: 0s; }
+        .emoji-2 { top: 70%; left: 12%; animation-delay: -4s; }
+        .emoji-3 { top: 25%; right: 8%; animation-delay: -8s; }
+        .emoji-4 { bottom: 25%; right: 12%; animation-delay: -12s; }
+        .emoji-5 { top: 45%; left: 3%; animation-delay: -6s; }
+        .emoji-6 { bottom: 15%; left: 25%; animation-delay: -10s; }
+
+        @keyframes emojiFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-30px) rotate(10deg); }
+            50% { transform: translateY(10px) rotate(-5deg); }
+            75% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            padding: 25px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        .logo { font-size: 1.3em; font-weight: 700; }
+        .nav-links { display: flex; gap: 35px; list-style: none; }
+        .nav-links a {
+            text-decoration: none;
+            font-weight: 500;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        .nav-links a:hover { opacity: 1; }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 0 20px;
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 10;
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 9vw, 7rem);
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -0.03em;
+            margin-bottom: 30px;
+            perspective: 1000px;
+        }
+
+        .title-char {
+            display: inline-block;
+            transition: all 0.2s ease-out;
+            transform-style: preserve-3d;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.3rem);
+            max-width: 600px;
+            margin: 0 auto 50px;
+            opacity: 0.7;
+            line-height: 1.6;
+        }
+
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            background: var(--theme-primary);
+            border: none;
+            border-radius: 60px;
+            color: white;
+            cursor: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(124, 58, 237, 0.3);
+        }
+        .cta-btn:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 20px 60px rgba(124, 58, 237, 0.4);
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85em;
+            opacity: 0.5;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+
+        /* Services - Creative Layout */
+        .services-section {
+            padding: 100px 30px 150px;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        .section-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .section-subtitle {
+            font-size: 1.2em;
+            opacity: 0.6;
+        }
+
+        /* Bento Grid - 다양한 크기 */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: 120px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .bento-item {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            cursor: none;
+            text-decoration: none;
+            color: var(--theme-text);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+        }
+
+        .bento-item:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+            z-index: 10;
+        }
+
+        .bento-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+        .bento-item:hover::before { transform: scaleX(1); }
+
+        /* 다양한 크기 */
+        .bento-item.large { grid-column: span 6; grid-row: span 3; }
+        .bento-item.medium { grid-column: span 4; grid-row: span 2; }
+        .bento-item.tall { grid-column: span 3; grid-row: span 3; }
+        .bento-item.wide { grid-column: span 5; grid-row: span 2; }
+        .bento-item.small { grid-column: span 3; grid-row: span 2; }
+
+        .bento-emoji {
+            font-size: 4em;
+            transition: transform 0.4s ease;
+            align-self: flex-start;
+        }
+        .bento-item:hover .bento-emoji {
+            transform: scale(1.2) rotate(-10deg);
+        }
+        .bento-item.large .bento-emoji { font-size: 6em; }
+
+        .bento-content {
+            margin-top: auto;
+        }
+        .bento-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .bento-item.large .bento-title { font-size: 2em; }
+        
+        .bento-desc {
+            opacity: 0.6;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        /* 각 아이템별 배경색 */
+        .bento-item.bg-gradient-1 { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); }
+        .bento-item.bg-gradient-2 { background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%); }
+        .bento-item.bg-gradient-3 { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); }
+        .bento-item.bg-gradient-4 { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
+        .bento-item.bg-gradient-5 { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); }
+        .bento-item.bg-gradient-6 { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); }
+        .bento-item.bg-gradient-7 { background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); }
+        .bento-item.bg-gradient-8 { background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); }
+
+        /* Decorative shapes inside cards */
+        .bento-shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.3;
+            transition: transform 0.4s ease;
+        }
+        .bento-item:hover .bento-shape {
+            transform: scale(1.5);
+        }
+
+        /* Marquee */
+        .marquee-section {
+            padding: 40px 0;
+            background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+            overflow: hidden;
+        }
+        .marquee { display: flex; animation: marquee 20s linear infinite; }
+        .marquee-content { display: flex; align-items: center; gap: 50px; padding-right: 50px; }
+        .marquee-item { font-size: 2em; font-weight: 700; color: white; white-space: nowrap; }
+        .marquee-emoji { font-size: 2em; }
+        @keyframes marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* Footer */
+        footer {
+            padding: 80px 50px;
+            text-align: center;
+            background: var(--theme-text);
+            color: var(--theme-bg);
+        }
+        .footer-title { font-size: 2.5em; font-weight: 700; margin-bottom: 30px; }
+        .footer-links { display: flex; justify-content: center; gap: 30px; margin-bottom: 30px; }
+        .footer-links a { color: rgba(255,255,255,0.7); text-decoration: none; }
+        .copyright { opacity: 0.4; font-size: 0.9em; }
+
+        /* Theme button */
+        .theme-btn {
+            position: fixed;
+            bottom: 30px; right: 30px;
+            padding: 15px 25px;
+            background: white;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            z-index: 100;
+            cursor: none;
+            transition: transform 0.3s;
+        }
+        .theme-btn:hover { transform: scale(1.05); }
+
+        /* Reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Mobile */
+        @media (max-width: 1024px) {
+            .bento-grid {
+                grid-template-columns: repeat(6, 1fr);
+                grid-auto-rows: 100px;
+            }
+            .bento-item.large { grid-column: span 6; grid-row: span 2; }
+            .bento-item.medium { grid-column: span 3; grid-row: span 2; }
+            .bento-item.tall { grid-column: span 3; grid-row: span 2; }
+            .bento-item.wide { grid-column: span 6; grid-row: span 2; }
+            .bento-item.small { grid-column: span 3; grid-row: span 2; }
+            .hero-objects { opacity: 0.5; }
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 20px; }
+            .nav-links { display: none; }
+            .services-section { padding: 60px 15px; }
+            .bento-grid { grid-template-columns: 1fr; gap: 15px; }
+            .bento-item, .bento-item.large, .bento-item.medium, .bento-item.tall, .bento-item.wide, .bento-item.small {
+                grid-column: span 1;
+                grid-row: span 1;
+                min-height: 200px;
+            }
+            .cursor, .cursor-dot { display: none; }
+            body { cursor: auto; }
+            .emoji-float { font-size: 2em; }
+            .floating-obj { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor"></div>
+    <div class="cursor-dot"></div>
+
+    <div class="theme-btn" onclick="changeTheme()">🎨 테마 변경</div>
+
+    <nav>
+        <div class="logo">SEUNGIL</div>
+        <ul class="nav-links">
+            <li><a href="index.html">HOME V1</a></li>
+            <li><a href="#services">서비스</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-objects">
+            <div class="floating-obj obj-1"></div>
+            <div class="floating-obj obj-2"></div>
+            <div class="floating-obj obj-3"></div>
+            <div class="floating-obj obj-4"></div>
+            <div class="floating-obj obj-5"></div>
+            <span class="emoji-float emoji-1">🎮</span>
+            <span class="emoji-float emoji-2">🚀</span>
+            <span class="emoji-float emoji-3">💡</span>
+            <span class="emoji-float emoji-4">🎨</span>
+            <span class="emoji-float emoji-5">⚡</span>
+            <span class="emoji-float emoji-6">🌟</span>
+        </div>
+
+        <div class="hero-content">
+            <h1 class="hero-title" id="heroTitle"></h1>
+            <p class="hero-subtitle">다양한 서비스와 재미있는 기능들이 모여있는 공간. 지금 바로 탐험을 시작하세요.</p>
+            <button class="cta-btn" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">
+                <span>시작하기</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </button>
+        </div>
+
+        <div class="scroll-hint">↓ SCROLL</div>
+    </section>
+
+    <section class="services-section" id="services">
+        <div class="section-header reveal">
+            <h2 class="section-title">뭐 할까요?</h2>
+            <p class="section-subtitle">관심가는 곳을 클릭해보세요</p>
+        </div>
+
+        <div class="bento-grid">
+            <a href="toilet.html" class="bento-item large bg-gradient-1 reveal">
+                <span class="bento-emoji">🚽</span>
+                <div class="bento-shape" style="width:200px;height:200px;background:var(--theme-primary);right:-50px;bottom:-50px;"></div>
+                <div class="bento-content">
+                    <h3 class="bento-title">대똥여지도</h3>
+                    <p class="bento-desc">주변 깨끗한 화장실을 찾아보세요. 실시간 리뷰와 평점 확인 가능!</p>
+                </div>
+            </a>
+
+            <a href="lck.html" class="bento-item medium bg-gradient-2 reveal">
+                <span class="bento-emoji">🎮</span>
+                <div class="bento-content">
+                    <h3 class="bento-title">LCK</h3>
+                    <p class="bento-desc">실시간 순위 & 일정</p>
+                </div>
+            </a>
+
+            <a href="weather.html" class="bento-item small bg-gradient-5 reveal">
+                <span class="bento-emoji">🌤️</span>
+                <div class="bento-content">
+                    <h3 class="bento-title">날씨</h3>
+                </div>
+            </a>
+
+            <a href="games.html" class="bento-item tall bg-gradient-3 reveal">
+                <span class="bento-emoji">👾</span>
+                <div class="bento-shape" style="width:100px;height:100px;background:var(--theme-accent);right:20px;top:50%;"></div>
+                <div class="bento-content">
+                    <h3 class="bento-title">미니게임</h3>
+                    <p class="bento-desc">갤러가, 피하기 등 아케이드 게임</p>
+                </div>
+            </a>
+
+            <a href="finance.html" class="bento-item wide bg-gradient-4 reveal">
+                <span class="bento-emoji">💰</span>
+                <div class="bento-content">
+                    <h3 class="bento-title">금융 정보</h3>
+                    <p class="bento-desc">환율, 금값, 코스피 실시간 확인</p>
+                </div>
+            </a>
+
+            <a href="news.html" class="bento-item medium bg-gradient-6 reveal">
+                <span class="bento-emoji">📰</span>
+                <div class="bento-shape" style="width:80px;height:80px;background:var(--theme-secondary);left:-20px;bottom:-20px;"></div>
+                <div class="bento-content">
+                    <h3 class="bento-title">건설뉴스</h3>
+                    <p class="bento-desc">업계 최신 소식</p>
+                </div>
+            </a>
+
+            <a href="board.html" class="bento-item small bg-gradient-7 reveal">
+                <span class="bento-emoji">📝</span>
+                <div class="bento-content">
+                    <h3 class="bento-title">게시판</h3>
+                </div>
+            </a>
+
+            <a href="restaurant.html" class="bento-item medium bg-gradient-8 reveal">
+                <span class="bento-emoji">🍽️</span>
+                <div class="bento-content">
+                    <h3 class="bento-title">맛집 탐색</h3>
+                    <p class="bento-desc">주변 맛집 찾기</p>
+                </div>
+            </a>
+
+            <a href="calculator.html" class="bento-item small bg-gradient-1 reveal">
+                <span class="bento-emoji">🧮</span>
+                <div class="bento-content">
+                    <h3 class="bento-title">계산기</h3>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section class="marquee-section">
+        <div class="marquee">
+            <div class="marquee-content">
+                <span class="marquee-emoji">🎮</span>
+                <span class="marquee-item">PLAY</span>
+                <span class="marquee-emoji">🔍</span>
+                <span class="marquee-item">EXPLORE</span>
+                <span class="marquee-emoji">🎨</span>
+                <span class="marquee-item">CREATE</span>
+                <span class="marquee-emoji">⚡</span>
+                <span class="marquee-item">ENJOY</span>
+            </div>
+            <div class="marquee-content">
+                <span class="marquee-emoji">🎮</span>
+                <span class="marquee-item">PLAY</span>
+                <span class="marquee-emoji">🔍</span>
+                <span class="marquee-item">EXPLORE</span>
+                <span class="marquee-emoji">🎨</span>
+                <span class="marquee-item">CREATE</span>
+                <span class="marquee-emoji">⚡</span>
+                <span class="marquee-item">ENJOY</span>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <h2 class="footer-title">Let's Explore! 🚀</h2>
+        <div class="footer-links">
+            <a href="index.html">HOME V1</a>
+            <a href="board.html">게시판</a>
+            <a href="games.html">게임</a>
+        </div>
+        <p class="copyright">© 2026 SEUNGIL Playground</p>
+    </footer>
+
+    <script>
+        const themes = [
+            { primary: '#7c3aed', secondary: '#f472b6', accent: '#fbbf24', bg: '#fefefe', text: '#1e1b4b' },
+            { primary: '#ec4899', secondary: '#f97316', accent: '#84cc16', bg: '#fffbf5', text: '#500724' },
+            { primary: '#3b82f6', secondary: '#06b6d4', accent: '#f59e0b', bg: '#f0f9ff', text: '#1e3a5f' },
+            { primary: '#10b981', secondary: '#14b8a6', accent: '#f472b6', bg: '#f0fdf4', text: '#064e3b' },
+            { primary: '#f97316', secondary: '#eab308', accent: '#8b5cf6', bg: '#fffaf5', text: '#431407' },
+            { primary: '#ef4444', secondary: '#f472b6', accent: '#22d3ee', bg: '#fef5f5', text: '#450a0a' },
+        ];
+
+        let currentTheme = Math.floor(Math.random() * themes.length);
+
+        function applyTheme(t) {
+            document.documentElement.style.setProperty('--theme-primary', t.primary);
+            document.documentElement.style.setProperty('--theme-secondary', t.secondary);
+            document.documentElement.style.setProperty('--theme-accent', t.accent);
+            document.documentElement.style.setProperty('--theme-bg', t.bg);
+            document.documentElement.style.setProperty('--theme-text', t.text);
+            document.body.style.background = t.bg;
+            document.body.style.color = t.text;
+            document.querySelector('.marquee-section').style.background = `linear-gradient(135deg, ${t.primary}, ${t.secondary})`;
+            document.querySelector('.cta-btn').style.background = t.primary;
+            document.querySelector('.cta-btn').style.boxShadow = `0 10px 40px ${t.primary}50`;
+            document.querySelectorAll('.floating-obj').forEach((obj, i) => {
+                const colors = [t.primary, t.secondary, t.accent];
+                obj.style.background = `linear-gradient(135deg, ${colors[i % 3]}, ${colors[(i + 1) % 3]})`;
+            });
+            updateTitleColors();
+        }
+
+        function changeTheme() {
+            currentTheme = (currentTheme + 1) % themes.length;
+            applyTheme(themes[currentTheme]);
+        }
+
+        // Title
+        const titleText = "SEUNGIL PLAYGROUND";
+        const heroTitle = document.getElementById('heroTitle');
+        let titleChars = [];
+
+        titleText.split('').forEach((char, i) => {
+            const span = document.createElement('span');
+            span.className = 'title-char';
+            span.textContent = char === ' ' ? '\u00A0' : char;
+            heroTitle.appendChild(span);
+            titleChars.push(span);
+        });
+
+        function updateTitleColors() {
+            const t = themes[currentTheme];
+            titleChars.forEach((char, i) => {
+                const progress = i / titleChars.length;
+                char.style.color = interpolateColor(t.primary, t.secondary, progress);
+            });
+        }
+
+        function interpolateColor(c1, c2, f) {
+            const hex = s => parseInt(s, 16);
+            const r = Math.round(hex(c1.slice(1,3)) + (hex(c2.slice(1,3)) - hex(c1.slice(1,3))) * f);
+            const g = Math.round(hex(c1.slice(3,5)) + (hex(c2.slice(3,5)) - hex(c1.slice(3,5))) * f);
+            const b = Math.round(hex(c1.slice(5,7)) + (hex(c2.slice(5,7)) - hex(c1.slice(5,7))) * f);
+            return `rgb(${r},${g},${b})`;
+        }
+
+        let mouseX = 0, mouseY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            const cx = window.innerWidth / 2;
+            const cy = window.innerHeight / 2;
+            const rx = (mouseX - cx) / 20;
+            const ry = -(mouseY - cy) / 20;
+            const mx = (mouseX - cx) / 30;
+            const my = (mouseY - cy) / 30;
+
+            heroTitle.style.transform = `translate(${mx}px, ${my}px) rotateX(${ry}deg) rotateY(${rx}deg)`;
+
+            titleChars.forEach((char, i) => {
+                const rect = char.getBoundingClientRect();
+                const dist = Math.hypot(mouseX - rect.left - rect.width/2, mouseY - rect.top - rect.height/2);
+                const intensity = Math.max(0, 1 - dist / 150);
+                char.style.transform = `translateY(${-intensity * 30}px) scale(${1 + intensity * 0.4})`;
+                if (intensity > 0.1) {
+                    char.style.color = themes[currentTheme].accent;
+                    char.style.textShadow = `0 0 ${30*intensity}px ${themes[currentTheme].accent}`;
+                } else {
+                    char.style.color = interpolateColor(themes[currentTheme].primary, themes[currentTheme].secondary, i/titleChars.length);
+                    char.style.textShadow = 'none';
+                }
+            });
+
+            // Floating objects parallax
+            document.querySelectorAll('.floating-obj').forEach((obj, i) => {
+                const speed = 0.02 + i * 0.01;
+                obj.style.transform = `translate(${(mouseX - cx) * speed}px, ${(mouseY - cy) * speed}px)`;
+            });
+        });
+
+        // Cursor
+        const cursor = document.querySelector('.cursor');
+        const cursorDot = document.querySelector('.cursor-dot');
+        let cursorX = 0, cursorY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+        });
+
+        (function animateCursor() {
+            cursorX += (mouseX - cursorX) * 0.1;
+            cursorY += (mouseY - cursorY) * 0.1;
+            cursor.style.left = cursorX + 'px';
+            cursor.style.top = cursorY + 'px';
+            requestAnimationFrame(animateCursor);
+        })();
+
+        document.querySelectorAll('a, button, .bento-item, .theme-btn').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        });
+
+        // Reveal
+        const reveals = document.querySelectorAll('.reveal');
+        window.addEventListener('scroll', () => {
+            reveals.forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 100) el.classList.add('active');
+            });
+        });
+        reveals.forEach(el => { if (el.getBoundingClientRect().top < window.innerHeight - 100) el.classList.add('active'); });
+
+        applyTheme(themes[currentTheme]);
+    </script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계산기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .calculator {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: right;
+            min-width: 280px;
+        }
+
+        .expression {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            min-height: 24px;
+            word-break: break-all;
+        }
+
+        .result {
+            color: #fff;
+            font-size: 36px;
+            font-weight: 300;
+            margin-top: 8px;
+            word-break: break-all;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .number {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .number:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .operator {
+            background: rgba(233, 69, 96, 0.8);
+            color: #fff;
+        }
+
+        .operator:hover {
+            background: rgba(233, 69, 96, 1);
+        }
+
+        .function {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .function:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .equals {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            grid-column: span 2;
+        }
+
+        .equals:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .clear {
+            background: rgba(231, 76, 60, 0.8);
+            color: #fff;
+        }
+
+        .clear:hover {
+            background: rgba(231, 76, 60, 1);
+        }
+
+        .error {
+            color: #e94560 !important;
+        }
+
+        .history {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .history-title {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .history-item {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            padding: 4px 0;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .history-item:hover {
+            color: #fff;
+        }
+
+        .keyboard-hint {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 11px;
+            margin-top: 15px;
+        }
+    
+        @media (max-width: 500px) {
+            .calculator { width: 95%; padding: 15px; }
+            .display { font-size: 2em; padding: 15px; }
+            .btn { font-size: 1.2em; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="expression" id="expression"></div>
+            <div class="result" id="result">0</div>
+        </div>
+        
+        <div class="buttons">
+            <button class="clear" onclick="clearAll()">C</button>
+            <button class="function" onclick="backspace()">⌫</button>
+            <button class="function" onclick="appendOp('%')">%</button>
+            <button class="operator" onclick="appendOp('/')">÷</button>
+            
+            <button class="number" onclick="appendNum('7')">7</button>
+            <button class="number" onclick="appendNum('8')">8</button>
+            <button class="number" onclick="appendNum('9')">9</button>
+            <button class="operator" onclick="appendOp('*')">×</button>
+            
+            <button class="number" onclick="appendNum('4')">4</button>
+            <button class="number" onclick="appendNum('5')">5</button>
+            <button class="number" onclick="appendNum('6')">6</button>
+            <button class="operator" onclick="appendOp('-')">−</button>
+            
+            <button class="number" onclick="appendNum('1')">1</button>
+            <button class="number" onclick="appendNum('2')">2</button>
+            <button class="number" onclick="appendNum('3')">3</button>
+            <button class="operator" onclick="appendOp('+')">+</button>
+            
+            <button class="number" onclick="appendNum('0')">0</button>
+            <button class="number" onclick="appendNum('.')">.</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+
+        <div class="history" id="historyPanel">
+            <div class="history-title">최근 기록</div>
+            <div id="historyList"></div>
+        </div>
+
+        <div class="keyboard-hint">키보드로 입력 가능 • Enter = 계산 • Esc = 초기화</div>
+    </div>
+
+    <script>
+        let expression = '';
+        let history = [];
+        const maxHistory = 5;
+
+        const expressionEl = document.getElementById('expression');
+        const resultEl = document.getElementById('result');
+        const historyListEl = document.getElementById('historyList');
+
+        function updateDisplay() {
+            expressionEl.textContent = formatExpression(expression);
+            
+            // 실시간 미리보기
+            if (expression) {
+                try {
+                    const preview = safeEval(expression);
+                    if (!isNaN(preview) && isFinite(preview)) {
+                        resultEl.textContent = formatNumber(preview);
+                        resultEl.classList.remove('error');
+                    }
+                } catch (e) {
+                    // 아직 완성되지 않은 수식이면 무시
+                }
+            } else {
+                resultEl.textContent = '0';
+            }
+        }
+
+        function formatExpression(expr) {
+            return expr
+                .replace(/\*/g, ' × ')
+                .replace(/\//g, ' ÷ ')
+                .replace(/\+/g, ' + ')
+                .replace(/-/g, ' − ')
+                .replace(/%/g, ' % ');
+        }
+
+        function formatNumber(num) {
+            if (Number.isInteger(num)) {
+                return num.toLocaleString('ko-KR');
+            }
+            // 소수점 이하 최대 10자리
+            return parseFloat(num.toFixed(10)).toLocaleString('ko-KR', {
+                maximumFractionDigits: 10
+            });
+        }
+
+        function safeEval(expr) {
+            // 허용된 문자만 통과
+            if (!/^[\d+\-*/.%() ]+$/.test(expr)) {
+                throw new Error('허용되지 않는 문자');
+            }
+            
+            // 빈 표현식 체크
+            if (!expr.trim()) {
+                throw new Error('빈 수식');
+            }
+
+            // Function 생성자로 안전하게 평가
+            try {
+                const result = new Function('return ' + expr)();
+                if (typeof result !== 'number') {
+                    throw new Error('숫자가 아님');
+                }
+                return result;
+            } catch (e) {
+                throw new Error('계산 오류');
+            }
+        }
+
+        function appendNum(num) {
+            // 맨 앞에 0이 여러개 오는 것 방지
+            if (num === '0' && expression === '0') return;
+            if (expression === '0' && num !== '.') {
+                expression = num;
+            } else {
+                expression += num;
+            }
+            updateDisplay();
+        }
+
+        function appendOp(op) {
+            if (!expression && op !== '-') return;
+            
+            // 연속 연산자 방지
+            const lastChar = expression.slice(-1);
+            if (['+', '-', '*', '/', '%'].includes(lastChar)) {
+                expression = expression.slice(0, -1) + op;
+            } else {
+                expression += op;
+            }
+            updateDisplay();
+        }
+
+        function clearAll() {
+            expression = '';
+            resultEl.textContent = '0';
+            resultEl.classList.remove('error');
+            expressionEl.textContent = '';
+        }
+
+        function backspace() {
+            expression = expression.slice(0, -1);
+            updateDisplay();
+            if (!expression) {
+                resultEl.textContent = '0';
+            }
+        }
+
+        function calculate() {
+            if (!expression) return;
+
+            try {
+                const result = safeEval(expression);
+                
+                if (!isFinite(result)) {
+                    throw new Error('0으로 나눌 수 없습니다');
+                }
+
+                // 히스토리에 추가
+                addToHistory(expression, result);
+
+                // 결과 표시
+                resultEl.textContent = formatNumber(result);
+                resultEl.classList.remove('error');
+                expressionEl.textContent = formatExpression(expression) + ' =';
+                
+                // 결과를 새 표현식으로
+                expression = String(result);
+
+            } catch (e) {
+                resultEl.textContent = '오류';
+                resultEl.classList.add('error');
+            }
+        }
+
+        function addToHistory(expr, result) {
+            history.unshift({ expr, result });
+            if (history.length > maxHistory) {
+                history.pop();
+            }
+            renderHistory();
+        }
+
+        function renderHistory() {
+            historyListEl.innerHTML = history.map((item, i) => 
+                `<div class="history-item" onclick="loadHistory(${i})">${formatExpression(item.expr)} = ${formatNumber(item.result)}</div>`
+            ).join('');
+        }
+
+        function loadHistory(index) {
+            expression = history[index].expr;
+            updateDisplay();
+        }
+
+        // 키보드 지원
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') appendNum(e.key);
+            else if (e.key === '.') appendNum('.');
+            else if (e.key === '+') appendOp('+');
+            else if (e.key === '-') appendOp('-');
+            else if (e.key === '*') appendOp('*');
+            else if (e.key === '/') { e.preventDefault(); appendOp('/'); }
+            else if (e.key === '%') appendOp('%');
+            else if (e.key === 'Enter' || e.key === '=') calculate();
+            else if (e.key === 'Escape') clearAll();
+            else if (e.key === 'Backspace') backspace();
+        });
+    </script>
+</body>
+</html>
