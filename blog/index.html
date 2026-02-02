@@ -42,10 +42,14 @@
 
   <script defer src="/blog/assets/blog.js"></script>
   <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-    Blog.pageIndex().catch(err=>{
-      console.error(err);
-      document.getElementById('grid').innerHTML = '<div class="notice">글 목록을 불러오지 못했습니다.</div>'
+    // blog.js is loaded with defer, so run after DOM is parsed
+    window.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('year').textContent = new Date().getFullYear();
+      (window.Blog?.pageIndex ? window.Blog.pageIndex() : Promise.reject(new Error('Blog not loaded')))
+        .catch(err=>{
+          console.error(err);
+          document.getElementById('grid').innerHTML = '<div class="notice">글 목록을 불러오지 못했습니다.</div>'
+        });
     });
   </script>
 </body>
