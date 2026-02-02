@@ -1,9 +1,9 @@
 ---
-title: "BIM·건설 디지털 전환 뉴스 요약 (2026-02)"
-date: "2026-02-02"
+title: BIM·건설 디지털 전환 뉴스 요약 (2026-02)
+date: 2026-02-02
 tags: [BIM, 건설, 디지털전환, openBIM, 뉴스요약]
-excerpt: "표준(openBIM/IFC), Scan-to-BIM, CDE, 디지털 트윈 등 최근 BIM/건설 업계에서 반복되는 흐름을 ‘실무 체크리스트’ 관점으로 정리합니다."
-thumbnail: "https://commons.wikimedia.org/wiki/Special:FilePath/Architectural_BIM_3D_Modeling.jpg"
+excerpt: 표준(openBIM/IFC), Scan-to-BIM, CDE, 디지털 트윈 등 최근 BIM/건설 업계에서 반복되는 흐름을 ‘실무 체크리스트’ 관점으로 정리합니다.
+thumbnail: https://commons.wikimedia.org/wiki/Special:FilePath/Architectural_BIM_3D_Modeling.jpg
 ---
 
 > 이 글은 특정 회사/개인의 내부 정보나 개인정보를 포함하지 않습니다. (프로젝트명, 담당자, 계정, 키 등 비공개)

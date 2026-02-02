@@ -31,11 +31,6 @@
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/1/</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://bimarchi-pg.com/blog/4/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -47,6 +42,11 @@
   </url>
   <url>
     <loc>https://bimarchi-pg.com/blog/2/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://bimarchi-pg.com/blog/1/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

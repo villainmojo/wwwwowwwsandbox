@@ -1,9 +1,9 @@
 ---
-title: "Moltbot으로 코인 거래 자동화하기: 중요한 포인트만 정리"
-date: "2026-02-02"
+title: Moltbot으로 코인 거래 자동화하기: 중요한 포인트만 정리
+date: 2026-02-02
 tags: [Moltbot, 자동화, 코인, 트레이딩, 리스크관리]
-excerpt: "자동매매는 ‘수익’보다 ‘사고 방지’가 먼저입니다. Moltbot을 활용할 때 반드시 챙겨야 할 안전장치·구조·운영 팁을 정리합니다."
-thumbnail: "https://commons.wikimedia.org/wiki/Special:FilePath/Bitcoin-USD_2017-02-02_-_2018-02-02_Kraken_Candlestick_Chart.png"
+excerpt: 자동매매는 ‘수익’보다 ‘사고 방지’가 먼저입니다. Moltbot을 활용할 때 반드시 챙겨야 할 안전장치·구조·운영 팁을 정리합니다.
+thumbnail: https://commons.wikimedia.org/wiki/Special:FilePath/Bitcoin-USD_2017-02-02_-_2018-02-02_Kraken_Candlestick_Chart.png
 ---
 
 > ⚠️ 면책: 이 글은 투자 조언이 아닙니다. 자동매매는 손실 가능성이 높고, 실수 한 번으로 계좌가 크게 흔들릴 수 있습니다.

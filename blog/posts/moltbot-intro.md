@@ -1,9 +1,9 @@
 ---
-title: "Moltbot 소개: ‘나만의 자동화 비서’를 직접 운영하는 방법"
-date: "2026-02-02"
+title: Moltbot 소개: ‘나만의 자동화 비서’를 직접 운영하는 방법
+date: 2026-02-02
 tags: [Moltbot, 자동화, 봇, 워크플로우, 생산성]
-excerpt: "메신저로 대화하는 AI를 ‘내 서버/VPS’에서 운영하면 무엇이 좋아질까? Moltbot을 중심으로 자동화 설계를 쉽게 풀어봅니다."
-thumbnail: "https://commons.wikimedia.org/wiki/Special:FilePath/RobotMX5.jpg"
+excerpt: 메신저로 대화하는 AI를 ‘내 서버/VPS’에서 운영하면 무엇이 좋아질까? Moltbot을 중심으로 자동화 설계를 쉽게 풀어봅니다.
+thumbnail: https://commons.wikimedia.org/wiki/Special:FilePath/RobotMX5.jpg
 ---
 
 > 이 글은 개인 계정/토큰/서버 주소 등 **민감한 정보(개인정보·비밀키)**를 포함하지 않습니다. 예시는 전부 가상 값입니다.
