@@ -28,18 +28,20 @@
       <div class="prose" id="content"></div>
 
       <section class="extras" id="extras" style="display:none">
-        <div class="panel" id="panelNav" style="display:none">
-          <div class="panel-title">다음 글 / 이전 글</div>
-          <div class="panel-body">
-            <div class="post-nav" id="postNav"></div>
-          </div>
+        <div class="navrow" id="navRow" style="display:none">
+          <a class="navlink prev" id="prevLink" href="#" style="display:none">
+            <span class="cap">작가의 이전글</span>
+            <span class="ttl"></span>
+          </a>
+          <a class="navlink next" id="nextLink" href="#" style="display:none">
+            <span class="cap">작가의 다음글</span>
+            <span class="ttl"></span>
+          </a>
         </div>
 
-        <div class="panel" id="panelRelated" style="display:none">
-          <div class="panel-title">관련 글</div>
-          <div class="panel-body">
-            <div class="related" id="related"></div>
-          </div>
+        <div class="recobox" id="recoBox" style="display:none">
+          <div class="reco-title">추천 글</div>
+          <div class="reco-grid" id="related"></div>
         </div>
       </section>
     </article>
@@ -125,21 +127,26 @@
           const older = (i>=0 && i<posts.length-1) ? posts[i+1] : null;
 
           const extras = document.getElementById('extras');
-          const nav = document.getElementById('postNav');
-          const panelNav = document.getElementById('panelNav');
-          const panelRelated = document.getElementById('panelRelated');
+          const navRow = document.getElementById('navRow');
+          const prevA = document.getElementById('prevLink');
+          const nextA = document.getElementById('nextLink');
 
-          const links = [];
-          if(newer) links.push(`<a class="nav-card" href="/blog/${encodeURIComponent(String(newer.id))}/"><span class="k">다음 글</span><span class="t">${newer.title}</span></a>`);
-          if(older) links.push(`<a class="nav-card" href="/blog/${encodeURIComponent(String(older.id))}/"><span class="k">이전 글</span><span class="t">${older.title}</span></a>`);
-
-          if(links.length){
+          if(newer){
+            nextA.style.display='';
+            nextA.href = `/blog/${encodeURIComponent(String(newer.id))}/`;
+            nextA.querySelector('.ttl').textContent = newer.title;
+          }
+          if(older){
+            prevA.style.display='';
+            prevA.href = `/blog/${encodeURIComponent(String(older.id))}/`;
+            prevA.querySelector('.ttl').textContent = older.title;
+          }
+          if(newer || older){
             extras.style.display='';
-            panelNav.style.display='';
-            nav.innerHTML = links.join('');
+            navRow.style.display='';
           }
 
-          // show related panel later if needed
+          // related below
 
           const rel = document.getElementById('related');
           if(tags.length){
