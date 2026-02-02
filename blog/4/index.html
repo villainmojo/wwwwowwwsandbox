@@ -46,6 +46,23 @@
       </section>
     </article>
 
+    <section class="comments" id="comments">
+      <h3>댓글</h3>
+      <div class="comment-list" id="commentList"></div>
+      <div class="comment-form">
+        <div class="row">
+          <input id="cName" placeholder="이름" maxlength="20" />
+          <input id="cPw" placeholder="비밀번호" type="password" maxlength="32" />
+        </div>
+        <textarea id="cBody" placeholder="댓글을 남겨주세요" maxlength="1000"></textarea>
+        <div class="submit">
+          <button class="cbtn" id="cSubmit">댓글 등록</button>
+          <span class="hint">수정/삭제 시 비밀번호가 필요합니다. (관리자는 로그인 시 자유 삭제)</span>
+          <span class="hint" id="cStatus"></span>
+        </div>
+      </div>
+    </section>
+
     <div class="footer">© <span id="year"></span> 자유 실험실 | 부업·AI·봇·자동화·취미</div>
   </div>
 
@@ -114,6 +131,111 @@
       // performance: lazy-load images
       document.querySelectorAll('#content img').forEach(img=>{ img.loading = 'lazy'; img.decoding = 'async' });
 
+      function setCStatus(msg){
+        const el = document.getElementById('cStatus');
+        if(el) el.textContent = msg || '';
+      }
+
+      function escapeText(s){
+        return String(s||'')
+          .replace(/&/g,'&amp;')
+          .replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;')
+          .replace(/\"/g,'&quot;')
+          .replace(/'/g,'&#39;');
+      }
+
+      async function isAdmin(){
+        const token = localStorage.getItem('adminToken');
+        if(!token) return false;
+        try{
+          const res = await fetch('/api/admin/verify', { headers: { 'Authorization': `Bearer ${token}` } });
+          const data = await res.json();
+          return !!data.success;
+        }catch{ return false }
+      }
+
+      async function renderComments(postId){
+        const listEl = document.getElementById('commentList');
+        listEl.innerHTML = '<div class="notice">불러오는 중…</div>';
+        const admin = await isAdmin();
+        try{
+          const res = await fetch('/api/blog/comments?postId='+encodeURIComponent(String(postId)));
+          const data = await res.json();
+          const items = data.comments || [];
+          if(!items.length){
+            listEl.innerHTML = '<div class="notice">댓글이 없습니다. 첫 댓글을 남겨보세요.</div>';
+            return;
+          }
+          listEl.innerHTML='';
+          items.forEach(c=>{
+            const el = document.createElement('div');
+            el.className='comment';
+            el.innerHTML = `
+              <div class="head">
+                <div class="name">${escapeText(c.name)}</div>
+                <div class="time">${(c.updatedAt ? '수정됨 · ' : '')}${(c.createdAt||'').slice(0,16).replace('T',' ')}</div>
+              </div>
+              <div class="body">${c.content||''}</div>
+              <div class="actions">
+                <button class="cbtn" data-act="edit">수정</button>
+                <button class="cbtn" data-act="del">삭제</button>
+                ${admin ? '<span class="hint">관리자</span>' : ''}
+              </div>
+            `;
+            el.querySelector('[data-act="edit"]').onclick = async ()=>{
+              const next = prompt('수정할 내용을 입력하세요', (c.content||'').replace(/<br\s*\/?\s*>/gi,'\n'));
+              if(next===null) return;
+              let pw = '';
+              const token = localStorage.getItem('adminToken');
+              if(!admin){ pw = prompt('비밀번호를 입력하세요'); if(pw===null) return; }
+              try{
+                const headers = { 'Content-Type':'application/json' };
+                if(admin && token) headers['Authorization'] = `Bearer ${token}`;
+                const r = await fetch('/api/blog/comments/edit', { method:'POST', headers, body: JSON.stringify({postId, commentId:c.id, password: pw||'', content: next}) });
+                const d = await r.json();
+                if(!d.success) throw new Error(d.error||'fail');
+                await renderComments(postId);
+              }catch(e){ alert('수정 실패: '+e.message) }
+            };
+            el.querySelector('[data-act="del"]').onclick = async ()=>{
+              if(!confirm('이 댓글을 삭제할까요?')) return;
+              let pw = '';
+              const token = localStorage.getItem('adminToken');
+              if(!admin){ pw = prompt('비밀번호를 입력하세요'); if(pw===null) return; }
+              try{
+                const headers = { 'Content-Type':'application/json' };
+                if(admin && token) headers['Authorization'] = `Bearer ${token}`;
+                const r = await fetch('/api/blog/comments/delete', { method:'POST', headers, body: JSON.stringify({postId, commentId:c.id, password: pw||''}) });
+                const d = await r.json();
+                if(!d.success) throw new Error(d.error||'fail');
+                await renderComments(postId);
+              }catch(e){ alert('삭제 실패: '+e.message) }
+            };
+            listEl.appendChild(el);
+          })
+        }catch(e){
+          listEl.innerHTML = '<div class="notice">댓글을 불러오지 못했습니다.</div>';
+        }
+      }
+
+      async function submitComment(postId){
+        const name = (document.getElementById('cName').value||'').trim();
+        const password = (document.getElementById('cPw').value||'').trim();
+        const content = (document.getElementById('cBody').value||'').trim();
+        if(!name || !password || !content){ setCStatus('이름/비밀번호/내용을 입력하세요.'); return; }
+        setCStatus('등록 중…');
+        try{
+          const r = await fetch('/api/blog/comments', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({postId, name, password, content}) });
+          const d = await r.json();
+          if(!d.success) throw new Error(d.error||'fail');
+          document.getElementById('cBody').value='';
+          setCStatus('등록 완료');
+          await renderComments(postId);
+        }catch(e){ setCStatus('등록 실패: '+e.message) }
+      }
+
+
       // Prev/Next + Related
       try{
         const idxRes = await fetch('/blog/posts/index.json');
@@ -121,6 +243,14 @@
           const data = await idxRes.json();
           const posts = data.posts || [];
           const i = posts.findIndex(p=>String(p.slug)===String(slug));
+
+          // comments (postId)
+          const postId = (i >= 0 && posts[i]) ? posts[i].id : null;
+          if(postId){
+            document.getElementById('cSubmit').onclick = ()=>submitComment(postId);
+            renderComments(postId);
+          }
+
 
           // newest-first index
           const newer = i>0 ? posts[i-1] : null;
