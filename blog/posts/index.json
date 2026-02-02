@@ -11,6 +11,51 @@
         "공지",
         "블로그"
       ]
+    },
+    {
+      "id": 4,
+      "slug": "moltbot-intro",
+      "title": "\"Moltbot 소개: ‘나만의 자동화 비서’를 직접 운영하는 방법\"",
+      "date": "\"2026-02-02\"",
+      "excerpt": "\"메신저로 대화하는 AI를 ‘내 서버/VPS’에서 운영하면 무엇이 좋아질까? Moltbot을 중심으로 자동화 설계를 쉽게 풀어봅니다.\"",
+      "thumbnail": "\"https://commons.wikimedia.org/wiki/Special:FilePath/RobotMX5.jpg\"",
+      "tags": [
+        "Moltbot",
+        "자동화",
+        "봇",
+        "워크플로우",
+        "생산성"
+      ]
+    },
+    {
+      "id": 3,
+      "slug": "moltbot-coin-trading-automation",
+      "title": "\"Moltbot으로 코인 거래 자동화하기: 중요한 포인트만 정리\"",
+      "date": "\"2026-02-02\"",
+      "excerpt": "\"자동매매는 ‘수익’보다 ‘사고 방지’가 먼저입니다. Moltbot을 활용할 때 반드시 챙겨야 할 안전장치·구조·운영 팁을 정리합니다.\"",
+      "thumbnail": "\"https://commons.wikimedia.org/wiki/Special:FilePath/Bitcoin-USD_2017-02-02_-_2018-02-02_Kraken_Candlestick_Chart.png\"",
+      "tags": [
+        "Moltbot",
+        "자동화",
+        "코인",
+        "트레이딩",
+        "리스크관리"
+      ]
+    },
+    {
+      "id": 2,
+      "slug": "bim-construction-news-2026-02",
+      "title": "\"BIM·건설 디지털 전환 뉴스 요약 (2026-02)\"",
+      "date": "\"2026-02-02\"",
+      "excerpt": "\"표준(openBIM/IFC), Scan-to-BIM, CDE, 디지털 트윈 등 최근 BIM/건설 업계에서 반복되는 흐름을 ‘실무 체크리스트’ 관점으로 정리합니다.\"",
+      "thumbnail": "\"https://commons.wikimedia.org/wiki/Special:FilePath/Architectural_BIM_3D_Modeling.jpg\"",
+      "tags": [
+        "BIM",
+        "건설",
+        "디지털전환",
+        "openBIM",
+        "뉴스요약"
+      ]
     }
   ]
 }
