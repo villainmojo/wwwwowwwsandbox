@@ -330,7 +330,7 @@
             <button class="nav-btn" data-page="board">게시판</button>
             <button class="nav-btn" data-page="news">건설뉴스</button>
             <button class="nav-btn" data-page="lck">LCK</button>
-            <a class="nav-btn" href="/blog/" target="_blank" rel="noopener noreferrer">📝 Blog</a>
+            <a class="nav-btn" href="/blog/" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, rgba(124,58,237,0.9), rgba(251,113,133,0.9)); color:#fff; border: none; font-weight: 800;">📝 자유 실험실 블로그</a>
             <a href="v2.html" class="nav-btn" style="background: linear-gradient(135deg, #6366f1, #ec4899); color: #fff; border: none; text-decoration: none; font-weight: bold;">✨ V2</a>
         </div>
     </nav>
@@ -343,6 +343,15 @@
             <a href="v2.html" class="v2-btn">✨ V2 홈 체험하기</a>
             
             <div class="app-grid">
+                <div class="app-card" data-link="/blog/" style="background: linear-gradient(145deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03)); border: 1px solid rgba(251,113,133,0.35);">
+                    <div class="app-card-glow" style="opacity:0.6; filter: blur(10px);"></div>
+                    <div class="app-card-inner">
+                        <div class="app-icon">📝</div>
+                        <div class="app-name">자유 실험실 블로그</div>
+                        <div class="app-desc">부업·AI·봇·자동화·취미</div>
+                    </div>
+                </div>
+
                 <div class="app-card" data-page="calculator">
                     <div class="app-card-glow"></div>
                     <div class="app-card-inner">
@@ -704,7 +713,13 @@
         }
         
         document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
-        document.querySelectorAll('.app-card').forEach(card => card.addEventListener('click', () => showPage(card.dataset.page)));
+        document.querySelectorAll('.app-card').forEach(card => card.addEventListener('click', () => {
+            if (card.dataset.link) {
+                window.open(card.dataset.link, '_blank', 'noopener,noreferrer');
+                return;
+            }
+            showPage(card.dataset.page);
+        }));
         
         const initialPage = getPageFromURL();
         showPage(initialPage, false);

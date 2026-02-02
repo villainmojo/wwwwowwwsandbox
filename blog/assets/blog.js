@@ -50,7 +50,8 @@ function renderCard(post){
   const tags = normalizeTags(post.tags)
   const el = document.createElement('article')
   el.className = 'card'
-  const url = `/blog/${encodeURIComponent(post.slug)}/`
+  const idOrSlug = (post.id ?? post.slug)
+  const url = `/blog/${encodeURIComponent(String(idOrSlug))}/`
   const thumb = post.thumbnail ? `<a class="thumb" href="${url}"><img alt="" src="${post.thumbnail}"></a>` : `<a class="thumb" href="${url}"></a>`
   el.innerHTML = `
     ${thumb}
