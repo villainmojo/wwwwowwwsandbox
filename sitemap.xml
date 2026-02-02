@@ -12,22 +12,22 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/about.html</loc>
+    <loc>https://bimarchi-pg.com/blog/about/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/privacy.html</loc>
+    <loc>https://bimarchi-pg.com/blog/privacy/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/contact.html</loc>
+    <loc>https://bimarchi-pg.com/blog/contact/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/post.html?slug=welcome</loc>
+    <loc>https://bimarchi-pg.com/blog/welcome/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

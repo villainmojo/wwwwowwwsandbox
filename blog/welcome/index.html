@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>블로그를 시작합니다 · 자유 실험실 | 부업·AI·봇·자동화·취미</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/blog/assets/blog.css" />
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml" />
+  <meta name="robots" content="index,follow" />
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand"><a href="/blog/">자유 실험실</a></div>
+      <nav class="nav">
+        <a href="/blog/">목록</a>
+        <a href="/blog/about/">소개</a>
+        <a href="/blog/privacy/">개인정보처리방침</a>
+      </nav>
+    </div>
+
+    <article class="post" id="post">
+      <h1 id="title">-</h1>
+      <div class="meta"><span id="date"></span></div>
+      <div class="tags" id="tags"></div>
+      <div class="prose" id="content"></div>
+    </article>
+
+    <div class="footer">© <span id="year"></span> 자유 실험실</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="/blog/assets/blog.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    // load fixed slug
+    (async ()=>{
+      const slug = 'welcome';
+      const res = await fetch(`/blog/posts/${slug}.md`, {cache:'no-store'});
+      if(!res.ok){ document.getElementById('post').innerHTML = '<div class="notice">글을 불러오지 못했습니다.</div>'; return; }
+      const md = await res.text();
+      const parsed = (function(md){
+        if(!md.startsWith('---')) return {meta:{}, body:md};
+        const end = md.indexOf('\n---',3);
+        if(end===-1) return {meta:{}, body:md};
+        const fm = md.slice(3,end).trim();
+        const body = md.slice(end+4).trimStart();
+        const meta = {};
+        fm.split('\n').forEach(line=>{ const idx=line.indexOf(':'); if(idx===-1) return; const k=line.slice(0,idx).trim(); let v=line.slice(idx+1).trim();
+          if(v.startsWith('[')&&v.endsWith(']')) meta[k]=v.slice(1,-1).split(',').map(s=>s.trim()).filter(Boolean);
+          else meta[k]=v;
+        });
+        return {meta, body};
+      })(md);
+
+      const title = parsed.meta.title || 'welcome';
+      const date = parsed.meta.date || '';
+      const tags = Array.isArray(parsed.meta.tags) ? parsed.meta.tags : (parsed.meta.tags? String(parsed.meta.tags).split(',').map(s=>s.trim()).filter(Boolean):[]);
+
+      document.getElementById('title').textContent = title;
+      document.getElementById('date').textContent = date;
+      document.title = `${title} · 자유 실험실 | 부업·AI·봇·자동화·취미`;
+      document.getElementById('tags').innerHTML = tags.map(t=>`<a class="tag" href="/blog/?tag=${encodeURIComponent(t)}">#${t}</a>`).join('');
+      document.getElementById('content').innerHTML = window.marked.parse(parsed.body, {mangle:false, headerIds:false});
+    })();
+  </script>
+</body>
+</html>

@@ -50,11 +50,12 @@ function renderCard(post){
   const tags = normalizeTags(post.tags)
   const el = document.createElement('article')
   el.className = 'card'
-  const thumb = post.thumbnail ? `<a class="thumb" href="/blog/post.html?slug=${encodeURIComponent(post.slug)}"><img alt="" src="${post.thumbnail}"></a>` : `<a class="thumb" href="/blog/post.html?slug=${encodeURIComponent(post.slug)}"></a>`
+  const url = `/blog/${encodeURIComponent(post.slug)}/`
+  const thumb = post.thumbnail ? `<a class="thumb" href="${url}"><img alt="" src="${post.thumbnail}"></a>` : `<a class="thumb" href="${url}"></a>`
   el.innerHTML = `
     ${thumb}
     <div class="card-body">
-      <h3 class="title"><a href="/blog/post.html?slug=${encodeURIComponent(post.slug)}">${post.title}</a></h3>
+      <h3 class="title"><a href="${url}">${post.title}</a></h3>
       <div class="meta">
         <span>${fmtDate(post.date)}</span>
         ${post.readingMinutes ? `<span>${post.readingMinutes}분</span>` : ''}
