@@ -27,8 +27,21 @@
       <div class="tags" id="tags"></div>
       <div class="prose" id="content"></div>
 
-      <div class="post-nav" id="postNav" style="display:none"></div>
-      <div class="related" id="related" style="display:none"></div>
+      <section class="extras" id="extras" style="display:none">
+        <div class="panel" id="panelNav" style="display:none">
+          <div class="panel-title">다음 글 / 이전 글</div>
+          <div class="panel-body">
+            <div class="post-nav" id="postNav"></div>
+          </div>
+        </div>
+
+        <div class="panel" id="panelRelated" style="display:none">
+          <div class="panel-title">관련 글</div>
+          <div class="panel-body">
+            <div class="related" id="related"></div>
+          </div>
+        </div>
+      </section>
     </article>
 
     <div class="footer">© <span id="year"></span> 자유 실험실 | 부업·AI·봇·자동화·취미</div>
@@ -111,14 +124,22 @@
           const newer = i>0 ? posts[i-1] : null;
           const older = (i>=0 && i<posts.length-1) ? posts[i+1] : null;
 
+          const extras = document.getElementById('extras');
           const nav = document.getElementById('postNav');
+          const panelNav = document.getElementById('panelNav');
+          const panelRelated = document.getElementById('panelRelated');
+
           const links = [];
-          if(newer) links.push(`<a href="/blog/${encodeURIComponent(String(newer.id))}/">← 다음 글: ${newer.title}</a>`);
-          if(older) links.push(`<a href="/blog/${encodeURIComponent(String(older.id))}/">이전 글: ${older.title} →</a>`);
+          if(newer) links.push(`<a class="nav-card" href="/blog/${encodeURIComponent(String(newer.id))}/"><span class="k">다음 글</span><span class="t">${newer.title}</span></a>`);
+          if(older) links.push(`<a class="nav-card" href="/blog/${encodeURIComponent(String(older.id))}/"><span class="k">이전 글</span><span class="t">${older.title}</span></a>`);
+
           if(links.length){
-            nav.style.display='';
+            extras.style.display='';
+            panelNav.style.display='';
             nav.innerHTML = links.join('');
           }
+
+          // show related panel later if needed
 
           const rel = document.getElementById('related');
           if(tags.length){
