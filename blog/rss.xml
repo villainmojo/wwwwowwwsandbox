@@ -3,17 +3,16 @@
   <channel>
     <title>자유 실험실 | 부업·AI·봇·자동화·취미</title>
     <link>https://bimarchi-pg.com/blog/</link>
-    <description>부업·AI·봇·자동화·취미를 기록하는 블로그</description>
+    <description>자유 실험실 — 부업·AI·봇·자동화·취미를 기록하는 블로그</description>
     <language>ko</language>
-    <lastBuildDate>Mon, 02 Feb 2026 07:35:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 02 Feb 2026 07:58:32 GMT</lastBuildDate>
 
     <item>
       <title>블로그를 시작합니다</title>
       <link>https://bimarchi-pg.com/blog/1/</link>
       <guid>https://bimarchi-pg.com/blog/1/</guid>
       <pubDate>Mon, 02 Feb 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[SENGVIS 블로그를 /blog 경로에 독립형으로 오픈했습니다.]]></description>
+      <description><![CDATA[이 블로그는 /blog 경로에 독립형으로 운영됩니다. 글 작성 형식 기본은 Markdown 태그는 글 상단 frontmatter에 tags: [태그1, 태그2] 이미지 넣기 유튜브 넣기(권장) 유튜브는 보통 아래처럼 iframe을 그대로 붙여넣으면 됩]]></description>
     </item>
-
   </channel>
 </rss>

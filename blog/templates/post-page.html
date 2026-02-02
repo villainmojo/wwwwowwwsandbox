@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>블로그를 시작합니다 · 자유 실험실 | 부업·AI·봇·자동화·취미</title>
+  <title>{{TITLE}} · 자유 실험실 | 부업·AI·봇·자동화·취미</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/blog/assets/blog.css" />
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml" />
@@ -36,7 +36,7 @@
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     (async ()=>{
-      const slug = 'welcome';
+      const slug = '{{SLUG}}';
       const res = await fetch(`/blog/posts/${slug}.md`, {cache:'no-store'});
       if(!res.ok){ document.getElementById('post').innerHTML = '<div class="notice">글을 불러오지 못했습니다.</div>'; return; }
       const md = await res.text();

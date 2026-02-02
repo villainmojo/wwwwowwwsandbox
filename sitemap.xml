@@ -5,7 +5,6 @@
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
-
   <url>
     <loc>https://bimarchi-pg.com/blog/</loc>
     <changefreq>daily</changefreq>
@@ -27,13 +26,13 @@
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/1/</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://bimarchi-pg.com/blog/rss.xml</loc>
     <changefreq>daily</changefreq>
     <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://bimarchi-pg.com/blog/1/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>
