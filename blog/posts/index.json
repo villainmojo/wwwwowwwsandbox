@@ -1,0 +1,12 @@
+{
+  "posts": [
+    {
+      "slug": "welcome",
+      "title": "블로그를 시작합니다",
+      "date": "2026-02-02",
+      "excerpt": "SENGVIS 블로그를 /blog 경로에 독립형으로 오픈했습니다.",
+      "thumbnail": "/blog/posts/thumbs/welcome.jpg",
+      "tags": ["공지", "블로그"]
+    }
+  ]
+}

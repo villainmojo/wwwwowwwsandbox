@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blog · SENGVIS</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/blog/assets/blog.css" />
+
+  <!-- Google AdSense: 마스터 계정에서 발급된 스크립트로 교체하세요 -->
+  <!--
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+  -->
+
+  <meta name="robots" content="index,follow" />
+  <meta name="description" content="SENGVIS 블로그 — 프로젝트/개발/업무 노트" />
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand"><a href="/blog/">SENGVIS Blog</a></div>
+      <nav class="nav">
+        <a href="/blog/about.html">소개</a>
+        <a href="/blog/privacy.html">개인정보처리방침</a>
+        <a href="/blog/contact.html">문의</a>
+      </nav>
+    </div>
+
+    <section class="hero">
+      <h1>블로그</h1>
+      <p id="heroSubtitle">독립형 블로그 페이지입니다. 글/태그/썸네일/이미지/유튜브 임베드를 지원합니다.</p>
+      <div class="controls">
+        <input id="search" class="input" placeholder="검색 (제목/요약/태그)…" autocomplete="off" />
+        <div class="notice" id="count">-</div>
+      </div>
+      <div class="notice">
+        AdSense 심사를 위해선 일반적으로 <b>충분한 고유 콘텐츠</b>, <b>개인정보처리방침</b>, <b>문의/소개</b>, <b>명확한 내비게이션</b>이 필요합니다.
+      </div>
+    </section>
+
+    <section class="grid" id="grid" aria-label="글 목록"></section>
+
+    <div class="footer">© <span id="year"></span> SENGVIS · /blog는 메인 페이지와 연결되지 않아도 직접 접속 가능합니다.</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="/blog/assets/blog.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    Blog.pageIndex().catch(err=>{
+      console.error(err);
+      document.getElementById('grid').innerHTML = '<div class="notice">글 목록을 불러오지 못했습니다.</div>'
+    });
+  </script>
+</body>
+</html>
