@@ -54,10 +54,11 @@
           <input id="cName" placeholder="이름" maxlength="20" />
           <input id="cPw" placeholder="비밀번호" type="password" maxlength="32" />
         </div>
-        <textarea id="cBody" placeholder="댓글을 남겨주세요" maxlength="1000"></textarea>
+        <div class="row row-wide">
+          <textarea id="cBody" placeholder="댓글을 남겨주세요" maxlength="1000"></textarea>
+        </div>
         <div class="submit">
-          <button class="cbtn" id="cSubmit">댓글 등록</button>
-          <span class="hint">수정/삭제 시 비밀번호가 필요합니다. (관리자는 로그인 시 자유 삭제)</span>
+          <button class="cbtn primary" id="cSubmit">댓글 등록</button>
           <span class="hint" id="cStatus"></span>
         </div>
       </div>
