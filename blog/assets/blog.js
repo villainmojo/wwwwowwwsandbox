@@ -35,7 +35,7 @@ function fmtDate(iso){
 }
 
 async function loadIndex(){
-  const res = await fetch('/blog/posts/index.json', {cache:'no-store'})
+  const res = await fetch('/blog/posts/index.json')
   if(!res.ok) throw new Error('index load failed')
   return res.json()
 }
@@ -52,7 +52,7 @@ function renderCard(post){
   el.className = 'card'
   const idOrSlug = (post.id ?? post.slug)
   const url = `/blog/${encodeURIComponent(String(idOrSlug))}/`
-  const thumb = post.thumbnail ? `<a class="thumb" href="${url}"><img alt="" src="${post.thumbnail}"></a>` : `<a class="thumb" href="${url}"></a>`
+  const thumb = post.thumbnail ? `<a class="thumb" href="${url}"><img alt="" src="${post.thumbnail}" loading="lazy" decoding="async"></a>` : `<a class="thumb" href="${url}"></a>`
   el.innerHTML = `
     ${thumb}
     <div class="card-body">
@@ -103,7 +103,7 @@ async function pagePost(){
     return
   }
 
-  const res = await fetch(`/blog/posts/${encodeURIComponent(slug)}.md`, {cache:'no-store'})
+  const res = await fetch(`/blog/posts/${encodeURIComponent(slug)}.md`)
   if(!res.ok){
     qs('#post').innerHTML = '<div class="notice">글을 불러오지 못했습니다.</div>'
     return
@@ -124,6 +124,8 @@ async function pagePost(){
   // markdown render via marked
   const html = window.marked.parse(body, {mangle:false, headerIds:false})
   qs('#content').innerHTML = html
+  // performance: lazy-load images in rendered markdown
+  qsa('#content img').forEach(img=>{ img.loading = 'lazy'; img.decoding = 'async' })
 }
 
 window.Blog = {pageIndex, pagePost}

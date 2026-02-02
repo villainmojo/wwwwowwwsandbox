@@ -30,14 +30,12 @@
 
     <section class="hero">
       <h1>자유 실험실 | 부업·AI·봇·자동화·취미</h1>
-      <p id="heroSubtitle">부업·AI·봇·자동화·취미를 기록합니다. (글/태그/썸네일/이미지/유튜브 지원)</p>
+      <p id="heroSubtitle">부업·AI·봇·자동화·취미를 기록합니다.</p>
       <div class="controls">
         <input id="search" class="input" placeholder="검색 (제목/요약/태그)…" autocomplete="off" />
         <div class="notice" id="count">-</div>
       </div>
-      <div class="notice">
-        AdSense 심사를 위해선 일반적으로 <b>충분한 고유 콘텐츠</b>, <b>개인정보처리방침</b>, <b>문의/소개</b>, <b>명확한 내비게이션</b>이 필요합니다.
-      </div>
+      <!-- (removed) internal note -->
     </section>
 
     <section class="grid" id="grid" aria-label="글 목록"></section>
@@ -45,8 +43,7 @@
     <div class="footer">© <span id="year"></span> 자유 실험실 | 부업·AI·봇·자동화·취미</div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="/blog/assets/blog.js"></script>
+  <script defer src="/blog/assets/blog.js"></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     Blog.pageIndex().catch(err=>{

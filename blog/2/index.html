@@ -31,13 +31,13 @@
     <div class="footer">© <span id="year"></span> 자유 실험실 | 부업·AI·봇·자동화·취미</div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="/blog/assets/blog.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="/blog/assets/blog.js"></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     (async ()=>{
       const slug = 'bim-construction-news-2026-02';
-      const res = await fetch(`/blog/posts/${slug}.md`, {cache:'no-store'});
+      const res = await fetch(`/blog/posts/${slug}.md`);
       if(!res.ok){ document.getElementById('post').innerHTML = '<div class="notice">글을 불러오지 못했습니다.</div>'; return; }
       const md = await res.text();
 
