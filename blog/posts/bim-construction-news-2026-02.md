@@ -6,8 +6,6 @@ excerpt: 표준(openBIM/IFC), Scan-to-BIM, CDE, 디지털 트윈 등 최근 BIM/
 thumbnail: https://commons.wikimedia.org/wiki/Special:FilePath/Architectural_BIM_3D_Modeling.jpg
 ---
 
-> 이 글은 특정 회사/개인의 내부 정보나 개인정보를 포함하지 않습니다. (프로젝트명, 담당자, 계정, 키 등 비공개)
-
 ## 한눈에 보기(3줄 요약)
 - BIM은 “모델링”이 아니라 **데이터 기반 의사결정**으로 확장 중입니다.
 - 최근 소식/커뮤니티의 키워드는 **표준(openBIM/IFC), Scan-to-BIM(As-built), 협업(CDE), 운영(디지털 트윈)** 쪽으로 모입니다.
