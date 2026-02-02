@@ -25,7 +25,11 @@
       <h1 id="title">-</h1>
       <div class="meta"><span id="date"></span></div>
       <div class="tags" id="tags"></div>
+      <div class="toc" id="toc" style="display:none"></div>
       <div class="prose" id="content"></div>
+
+      <div class="post-nav" id="postNav" style="display:none"></div>
+      <div class="related" id="related" style="display:none"></div>
     </article>
 
     <div class="footer">© <span id="year"></span> 자유 실험실 | 부업·AI·봇·자동화·취미</div>
@@ -78,6 +82,85 @@
       document.title = `${title} · 자유 실험실 | 부업·AI·봇·자동화·취미`;
       document.getElementById('tags').innerHTML = tags.map(t=>`<a class="tag" href="/blog/?tag=${encodeURIComponent(t)}">#${t}</a>`).join('');
       document.getElementById('content').innerHTML = window.marked.parse(body, {mangle:false, headerIds:false});
+
+      // performance: lazy-load images
+      document.querySelectorAll('#content img').forEach(img=>{ img.loading = 'lazy'; img.decoding = 'async' });
+
+      // TOC
+      function slugify(s){
+        return String(s).toLowerCase().trim()
+          .replace(/[^\w\u3131-\uD79D\- ]+/g,'')
+          .replace(/\s+/g,'-')
+          .replace(/-+/g,'-')
+      }
+      const toc = document.getElementById('toc');
+      const headings = [...document.querySelectorAll('#content h2, #content h3')];
+      if(headings.length){
+        const used = new Map();
+        const items = headings.map(h=>{
+          const txt = h.textContent || '';
+          let id = slugify(txt) || 'section';
+          const n = (used.get(id) || 0) + 1;
+          used.set(id, n);
+          if(n > 1) id = `${id}-${n}`;
+          h.id = id;
+          return {level: h.tagName.toLowerCase(), id, txt}
+        })
+        toc.style.display = '';
+        toc.innerHTML = `
+          <div class="toc-title">목차</div>
+          <ul>
+            ${items.map(it=>`<li style="margin-left:${it.level==='h3' ? '14px' : '0px'}"><a href="#${it.id}">${it.txt}</a></li>`).join('')}
+          </ul>
+        `;
+      }
+
+      // Prev/Next + Related
+      try{
+        const idxRes = await fetch('/blog/posts/index.json');
+        if(idxRes.ok){
+          const data = await idxRes.json();
+          const posts = data.posts || [];
+          const i = posts.findIndex(p=>String(p.slug)===String(slug));
+
+          // newest-first index
+          const newer = i>0 ? posts[i-1] : null;
+          const older = (i>=0 && i<posts.length-1) ? posts[i+1] : null;
+
+          const nav = document.getElementById('postNav');
+          const links = [];
+          if(newer) links.push(`<a href="/blog/${encodeURIComponent(String(newer.id))}/">← 다음 글: ${newer.title}</a>`);
+          if(older) links.push(`<a href="/blog/${encodeURIComponent(String(older.id))}/">이전 글: ${older.title} →</a>`);
+          if(links.length){
+            nav.style.display='';
+            nav.innerHTML = links.join('');
+          }
+
+          const rel = document.getElementById('related');
+          if(tags.length){
+            const tagSet = new Set(tags.map(t=>String(t).toLowerCase()));
+            const related = posts
+              .filter(p=>String(p.slug)!==String(slug))
+              .map(p=>({
+                p,
+                score: normalizeTags(p.tags).reduce((acc,t)=>acc + (tagSet.has(String(t).toLowerCase()) ? 1 : 0), 0)
+              }))
+              .filter(x=>x.score>0)
+              .sort((a,b)=>b.score-a.score)
+              .slice(0, 6)
+              .map(x=>x.p);
+            if(related.length){
+              rel.style.display='';
+              rel.innerHTML = `
+                <h3>관련 글</h3>
+                <ul>
+                  ${related.map(p=>`<li><a href="/blog/${encodeURIComponent(String(p.id))}/">${p.title}</a></li>`).join('')}
+                </ul>
+              `;
+            }
+          }
+        }
+      }catch(e){ /* ignore */ }
     })();
   </script>
 </body>

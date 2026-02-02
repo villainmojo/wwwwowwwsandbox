@@ -20,6 +20,8 @@ import re
 import json
 import html
 import datetime as dt
+import urllib.request
+from urllib.parse import urlparse
 
 ROOT = "/root/wwwwowwwsandbox"
 BLOG_DIR = os.path.join(ROOT, "blog")
@@ -33,6 +35,8 @@ TEMPLATE = os.path.join(BLOG_DIR, "templates", "post-page.html")
 SITE = "https://bimarchi-pg.com"
 BLOG_TITLE = "자유 실험실 | 부업·AI·봇·자동화·취미"
 BLOG_DESC = "자유 실험실 — 부업·AI·봇·자동화·취미를 기록하는 블로그"
+
+THUMBS_DIR = os.path.join(POSTS_DIR, "thumbs")
 
 
 def parse_frontmatter(md: str):
@@ -85,6 +89,42 @@ def load_existing_ids():
 
 def ensure_dir(p: str):
     os.makedirs(p, exist_ok=True)
+
+
+def is_http_url(s: str) -> bool:
+    try:
+        u = urlparse(s)
+        return u.scheme in ("http", "https")
+    except Exception:
+        return False
+
+
+def download_thumb(url: str, out_path: str):
+    ensure_dir(os.path.dirname(out_path))
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        data = r.read()
+    with open(out_path, "wb") as f:
+        f.write(data)
+
+
+def write_svg_thumb(path: str, title: str):
+    # lightweight local placeholder to avoid 404s + external image latency
+    safe = html.escape((title or "")[:48])
+    svg = f"""<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1200\" height=\"675\" viewBox=\"0 0 1200 675\">
+  <defs>
+    <linearGradient id=\"g\" x1=\"0\" x2=\"1\" y1=\"0\" y2=\"1\">
+      <stop offset=\"0\" stop-color=\"#ede9fe\"/>
+      <stop offset=\"1\" stop-color=\"#fff1f2\"/>
+    </linearGradient>
+  </defs>
+  <rect width=\"1200\" height=\"675\" fill=\"url(#g)\"/>
+  <rect x=\"60\" y=\"60\" width=\"1080\" height=\"555\" rx=\"40\" fill=\"rgba(255,255,255,0.75)\" stroke=\"rgba(30,41,59,0.18)\"/>
+  <text x=\"120\" y=\"210\" font-family=\"system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif\" font-size=\"54\" font-weight=\"800\" fill=\"#111827\">{safe}</text>
+  <text x=\"120\" y=\"290\" font-family=\"system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif\" font-size=\"28\" font-weight=\"600\" fill=\"#475569\">자유 실험실</text>
+</svg>\n"""
+    ensure_dir(os.path.dirname(path))
+    open(path, "w", encoding="utf-8").write(svg)
 
 
 def render_post_page(slug: str, title: str, pid: int):
@@ -164,6 +204,7 @@ def build_robots():
 
 def main():
     ensure_dir(os.path.join(BLOG_DIR, "templates"))
+    ensure_dir(THUMBS_DIR)
     if not os.path.exists(TEMPLATE):
         raise SystemExit(f"Missing template: {TEMPLATE}")
 
@@ -188,7 +229,35 @@ def main():
         if not excerpt:
             excerpt = strip_md(body)[:140]
 
-        thumb = meta.get('thumbnail') or f"/blog/posts/thumbs/{slug}.jpg"
+        # Thumbnail policy
+        # - If meta.thumbnail is a remote URL: download once into thumbs/<slug>.jpg
+        # - Else if local thumbs/<slug>.jpg exists: use it
+        # - Else: generate lightweight SVG placeholder (thumbs/<slug>.svg)
+        thumb_meta = meta.get('thumbnail')
+        thumb_jpg_rel = f"/blog/posts/thumbs/{slug}.jpg"
+        thumb_jpg_abs = os.path.join(THUMBS_DIR, f"{slug}.jpg")
+        thumb_svg_rel = f"/blog/posts/thumbs/{slug}.svg"
+        thumb_svg_abs = os.path.join(THUMBS_DIR, f"{slug}.svg")
+
+        thumb = thumb_jpg_rel
+        if thumb_meta and isinstance(thumb_meta, str) and is_http_url(thumb_meta):
+            if not os.path.exists(thumb_jpg_abs):
+                try:
+                    download_thumb(thumb_meta, thumb_jpg_abs)
+                    thumb = thumb_jpg_rel
+                except Exception:
+                    if not os.path.exists(thumb_svg_abs):
+                        write_svg_thumb(thumb_svg_abs, title)
+                    thumb = thumb_svg_rel
+            else:
+                thumb = thumb_jpg_rel
+        else:
+            if os.path.exists(thumb_jpg_abs):
+                thumb = thumb_jpg_rel
+            else:
+                if not os.path.exists(thumb_svg_abs):
+                    write_svg_thumb(thumb_svg_abs, title)
+                thumb = thumb_svg_rel
 
         pid = existing.get(slug)
         if not pid:

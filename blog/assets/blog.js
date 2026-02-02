@@ -67,6 +67,37 @@ function renderCard(post){
   return el
 }
 
+function buildTagCounts(posts){
+  const counts = new Map()
+  posts.forEach(p=>{
+    normalizeTags(p.tags).forEach(t=>{
+      const key = String(t)
+      counts.set(key, (counts.get(key) || 0) + 1)
+    })
+  })
+  return [...counts.entries()].sort((a,b)=>b[1]-a[1]).map(([tag,count])=>({tag,count}))
+}
+
+function renderTagbar(allPosts, activeTag){
+  const el = qs('#tagbar')
+  if(!el) return
+  const top = buildTagCounts(allPosts).slice(0, 12)
+  el.innerHTML = ''
+
+  const mk = (href, text, active=false) => {
+    const a=document.createElement('a')
+    a.className = 'chip' + (active ? ' active' : '')
+    a.href = href
+    a.textContent = text
+    return a
+  }
+
+  el.appendChild(mk('/blog/', '전체', !activeTag))
+  top.forEach(({tag,count})=>{
+    el.appendChild(mk(`/blog/?tag=${encodeURIComponent(tag)}`, `#${tag} (${count})`, activeTag && tag.toLowerCase()===activeTag.toLowerCase()))
+  })
+}
+
 async function pageIndex(){
   document.title = `자유 실험실 | 부업·AI·봇·자동화·취미`;
   const grid = qs('#grid')
@@ -75,6 +106,9 @@ async function pageIndex(){
 
   const index = await loadIndex()
   let posts = index.posts || []
+
+  // render tag chips based on full set (before filtering)
+  renderTagbar(posts, tag)
 
   if(tag){
     posts = posts.filter(p => normalizeTags(p.tags).map(x=>x.toLowerCase()).includes(tag.toLowerCase()))
