@@ -22,5 +22,3 @@ tags: [공지, 블로그]
 ```html
 <iframe width="560" height="315" src="https://www.youtube.com/embed/VIDEO_ID" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 ```
-
-> AdSense 심사를 위한 필수 페이지(소개/문의/개인정보처리방침)도 포함되어 있습니다.
