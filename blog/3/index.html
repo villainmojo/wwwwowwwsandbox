@@ -35,13 +35,25 @@
     <div class="footer">© <span id="year"></span> 자유 실험실 | 부업·AI·봇·자동화·취미</div>
   </div>
 
-  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="/blog/assets/marked.min.js"></script>
   <script defer src="/blog/assets/blog.js"></script>
   <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-    (async ()=>{
-      const slug = 'moltbot-coin-trading-automation';
-      const res = await fetch(`/blog/posts/${slug}.md`);
+    // wait for deferred scripts (marked/blog.js) and DOM
+    window.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      const waitFor = (fn, timeoutMs=5000) => new Promise((resolve, reject)=>{
+        const started = Date.now();
+        (function tick(){
+          try{ if(fn()) return resolve(true) }catch(e){}
+          if(Date.now()-started > timeoutMs) return reject(new Error('timeout'))
+          setTimeout(tick, 30)
+        })()
+      })
+
+      ;(async ()=>{
+        const slug = 'moltbot-coin-trading-automation';
+        const res = await fetch(`/blog/posts/${slug}.md`);
       if(!res.ok){ document.getElementById('post').innerHTML = '<div class="notice">글을 불러오지 못했습니다.</div>'; return; }
       const md = await res.text();
 
@@ -81,6 +93,8 @@
       document.getElementById('date').textContent = date;
       document.title = `${title} · 자유 실험실 | 부업·AI·봇·자동화·취미`;
       document.getElementById('tags').innerHTML = tags.map(t=>`<a class="tag" href="/blog/?tag=${encodeURIComponent(t)}">#${t}</a>`).join('');
+
+      await waitFor(()=>window.marked && typeof window.marked.parse === 'function');
       document.getElementById('content').innerHTML = window.marked.parse(body, {mangle:false, headerIds:false});
 
       // performance: lazy-load images
@@ -161,7 +175,11 @@
           }
         }
       }catch(e){ /* ignore */ }
-    })();
+    })().catch(err=>{
+      console.error(err);
+      document.getElementById('content').innerHTML = '<div class="notice">글 렌더링 중 오류가 발생했습니다.</div>'
+    });
+  });
   </script>
 </body>
 </html>
