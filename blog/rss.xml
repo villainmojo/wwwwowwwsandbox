@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>자유 실험실 | 부업·AI·봇·자동화·취미</title>
+    <link>https://bimarchi-pg.com/blog/</link>
+    <description>부업·AI·봇·자동화·취미를 기록하는 블로그</description>
+    <language>ko</language>
+    <lastBuildDate>Mon, 02 Feb 2026 07:35:00 GMT</lastBuildDate>
+
+    <item>
+      <title>블로그를 시작합니다</title>
+      <link>https://bimarchi-pg.com/blog/post.html?slug=welcome</link>
+      <guid>https://bimarchi-pg.com/blog/post.html?slug=welcome</guid>
+      <pubDate>Mon, 02 Feb 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[SENGVIS 블로그를 /blog 경로에 독립형으로 오픈했습니다.]]></description>
+    </item>
+
+  </channel>
+</rss>

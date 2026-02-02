@@ -66,6 +66,7 @@ function renderCard(post){
 }
 
 async function pageIndex(){
+  document.title = `자유 실험실 | 부업·AI·봇·자동화·취미`;
   const grid = qs('#grid')
   const search = qs('#search')
   const tag = new URLSearchParams(location.search).get('tag')
@@ -114,6 +115,7 @@ async function pagePost(){
 
   qs('#title').textContent = title
   qs('#date').textContent = date
+  document.title = `${title} · 자유 실험실 | 부업·AI·봇·자동화·취미`;
   const tagsEl = qs('#tags')
   tagsEl.innerHTML = tags.map(t=>`<a class="tag" href="/blog/?tag=${encodeURIComponent(t)}">#${t}</a>`).join('')
 
