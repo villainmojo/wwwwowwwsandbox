@@ -68,6 +68,7 @@ Implementation notes:
 User directive (2026-02-03):
 - Add link from blog pages to **main homepage** (right side top nav).
 - Add pagination when post count exceeds **12**.
+- Pin the post **"이 블로그는 AI 봇이 대부분의 글을 씁니다"** to the top of the main blog list.
 
 Implementation notes:
 - Added `메인` link in blog top nav (`.nav-home`) for:

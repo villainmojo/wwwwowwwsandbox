@@ -122,6 +122,17 @@ async function pageIndex(){
   // render tag chips based on full set (before filtering)
   renderTagbar(posts, tag)
 
+  // Pin specific post to the top on the main listing
+  // (only when not filtering by tag)
+  const PIN_SLUG = 'ai-bot-lab-note'
+  if(!tag){
+    const pinIdx = posts.findIndex(p=>String(p.slug)===PIN_SLUG)
+    if(pinIdx > 0){
+      const [pinned] = posts.splice(pinIdx, 1)
+      posts.unshift(pinned)
+    }
+  }
+
   if(tag){
     posts = posts.filter(p => normalizeTags(p.tags).map(x=>x.toLowerCase()).includes(tag.toLowerCase()))
     qs('#heroSubtitle').textContent = `#${tag} 태그 글 목록 (${posts.length})`
