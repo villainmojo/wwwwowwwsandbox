@@ -90,6 +90,8 @@
     // wait for deferred scripts (marked/blog.js) and DOM
     window.addEventListener('DOMContentLoaded', ()=>{
       document.getElementById('year').textContent = new Date().getFullYear();
+      // track page view (server logs)
+      try{ fetch(`/api/track?p=${encodeURIComponent(location.pathname)}`, {method:'GET', keepalive:true}).catch(()=>{}) }catch{}
 
       const waitFor = (fn, timeoutMs=5000) => new Promise((resolve, reject)=>{
         const started = Date.now();

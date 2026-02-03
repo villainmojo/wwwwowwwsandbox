@@ -98,6 +98,14 @@ function renderTagbar(allPosts, activeTag){
   })
 }
 
+function trackPage(){
+  try{
+    const p = location.pathname
+    // avoid blocking render
+    fetch(`/api/track?p=${encodeURIComponent(p)}`, {method:'GET', keepalive:true}).catch(()=>{})
+  }catch{}
+}
+
 async function pageIndex(){
   document.title = `자유 실험실 | 부업·AI·봇·자동화·취미`;
   const grid = qs('#grid')
@@ -128,6 +136,7 @@ async function pageIndex(){
 
   search.addEventListener('input', applyFilter)
   applyFilter()
+  trackPage()
 }
 
 async function pagePost(){
