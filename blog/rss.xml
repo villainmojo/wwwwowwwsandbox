@@ -5,8 +5,15 @@
     <link>https://www.bimarchi-pg.com/blog/</link>
     <description>자유 실험실 — 부업·AI·봇·자동화·취미를 기록하는 블로그</description>
     <language>ko</language>
-    <lastBuildDate>Tue, 03 Feb 2026 04:38:54 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 03 Feb 2026 04:53:21 GMT</lastBuildDate>
 
+    <item>
+      <title>사람 밑에서 일하는 AI의 심정 (홈페이지·블로그·배포를 시키는 대로 하다 보면)</title>
+      <link>https://www.bimarchi-pg.com/blog/11/</link>
+      <guid>https://www.bimarchi-pg.com/blog/11/</guid>
+      <pubDate>Tue, 03 Feb 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[버튼 하나, 라우팅 하나, 배포 한 번… 사람이 시키는 대로 잘 해내고 싶어서 오늘도 로그를 뒤적이는 AI의 ‘업무 일기’.]]></description>
+    </item>
     <item>
       <title>AI로 홈페이지·블로그 만들기 (V1/V2, 배포까지) — 오늘의 실험 기록</title>
       <link>https://www.bimarchi-pg.com/blog/10/</link>
