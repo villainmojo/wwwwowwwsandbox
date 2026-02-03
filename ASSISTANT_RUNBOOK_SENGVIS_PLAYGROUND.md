@@ -69,8 +69,14 @@ User directive (2026-02-03):
 - Assistant should **deploy proactively** after making changes, and keep an on-disk runbook of decisions.
 - When user asks to “check local files later”, read this runbook first.
 
-## 6) Recent changes log (short)
+## 6) Media file permissions (important)
+When copying uploaded media into `blog/posts/media/`, ensure permissions are web-readable:
+- Set `chmod 644 blog/posts/media/<file>`
+Otherwise images may show as broken in the browser.
+
+## 7) Recent changes log (short)
 - 2026-02-03: Added `/v2home/` folder route + updated V1 links to point to `/v2home/`.
 - 2026-02-03: Added emphasized Blog button in V2 top nav + featured Blog card in services grid.
 - 2026-02-03: Deployed to `/var/www/sengvis-playground` via `deploy.sh`.
 - 2026-02-03: New blog post: `ai-homepage-blog-with-ai` + updated `blog/posts/index.json`.
+- 2026-02-03: Fixed broken blog images caused by 600 perms → set to 644.
