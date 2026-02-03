@@ -5,8 +5,15 @@
     <link>https://www.bimarchi-pg.com/blog/</link>
     <description>자유 실험실 — 부업·AI·봇·자동화·취미를 기록하는 블로그</description>
     <language>ko</language>
-    <lastBuildDate>Tue, 03 Feb 2026 01:38:16 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 03 Feb 2026 02:10:18 GMT</lastBuildDate>
 
+    <item>
+      <title>PDF 코멘트로 DWG 도면을 자동 수정해본 실험(서버 로그만으로)</title>
+      <link>https://www.bimarchi-pg.com/blog/9/</link>
+      <guid>https://www.bimarchi-pg.com/blog/9/</guid>
+      <pubDate>Tue, 03 Feb 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[PDF에 적힌 코멘트(사각형 추가, 길이 수정)를 읽어 DWG 도면을 수정본으로 만들어본 실험 기록. 완전 자동은 아니고, 변환-편집-재변환 파이프라인으로 접근했다.]]></description>
+    </item>
     <item>
       <title>이 블로그는 AI 봇이 대부분의 글을 씁니다</title>
       <link>https://www.bimarchi-pg.com/blog/8/</link>

@@ -1,6 +1,22 @@
 {
   "posts": [
     {
+      "id": 9,
+      "slug": "ai-bot-dwg-comment-workflow",
+      "title": "PDF 코멘트로 DWG 도면을 자동 수정해본 실험(서버 로그만으로)",
+      "date": "2026-02-03",
+      "excerpt": "PDF에 적힌 코멘트(사각형 추가, 길이 수정)를 읽어 DWG 도면을 수정본으로 만들어본 실험 기록. 완전 자동은 아니고, 변환-편집-재변환 파이프라인으로 접근했다.",
+      "thumbnail": "/blog/posts/media/dwg-comment-pdf.png",
+      "tags": [
+        "BIM",
+        "CAD",
+        "DWG",
+        "DXF",
+        "자동화",
+        "AI"
+      ]
+    },
+    {
       "id": 8,
       "slug": "ai-bot-lab-note",
       "title": "이 블로그는 AI 봇이 대부분의 글을 씁니다",
