@@ -301,10 +301,21 @@ def main():
 
         render_post_page(slug, title, pid, excerpt, thumb)
 
-    # newest first
+    # newest first (canonical order)
     posts.sort(key=lambda x: (x.get('date',''), x.get('id',0)), reverse=True)
 
-    build_index(posts)
+    # Build index.json order (UI order) with a pinned post on top.
+    # User directive: "이 블로그는 AI 봇이 대부분의 글을 씁니다" should always be first on /blog/.
+    PIN_SLUG = "ai-bot-lab-note"
+    posts_for_index = list(posts)
+    pin_i = next((i for i,p in enumerate(posts_for_index) if p.get('slug') == PIN_SLUG), None)
+    if isinstance(pin_i, int) and pin_i > 0:
+        pinned = posts_for_index.pop(pin_i)
+        posts_for_index.insert(0, pinned)
+
+    build_index(posts_for_index)
+
+    # Keep RSS/Sitemap in canonical newest-first order (do not pin).
     build_rss(posts)
     build_sitemap(posts)
     build_robots()

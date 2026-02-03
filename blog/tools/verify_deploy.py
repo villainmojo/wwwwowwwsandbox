@@ -52,13 +52,22 @@ DEFAULT_CHECKS: list[tuple[str, str, str]] = [
 
 
 def read_latest_post_id() -> int | None:
+    """Return the newest post id by (date, id) regardless of any UI pinning."""
     try:
         with open(LOCAL_INDEX_JSON, "r", encoding="utf-8") as f:
             data = json.load(f)
         posts = data.get("posts") or []
         if not posts:
             return None
-        pid = posts[0].get("id")
+
+        def key(p):
+            d = str(p.get('date') or '')
+            pid = p.get('id')
+            pid = pid if isinstance(pid, int) else 0
+            return (d, pid)
+
+        newest = max(posts, key=key)
+        pid = newest.get('id')
         return pid if isinstance(pid, int) else None
     except Exception:
         return None
