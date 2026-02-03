@@ -1,6 +1,40 @@
 {
   "posts": [
     {
+      "id": 7,
+      "slug": "do-we-still-need-drawings-ai",
+      "title": "Do We Still Need Drawings in the Age of AI?",
+      "date": "2026-02-03",
+      "excerpt": "BIM is becoming the standard, yet we still end with 2D drawings. In an AI-and-robotics future, should drawings remain the core deliverable—or should models become the language of construction?",
+      "thumbnail": "/blog/posts/thumbs/do-we-still-need-drawings-ai.svg",
+      "tags": [
+        "BIM",
+        "AI",
+        "Construction",
+        "DigitalConstruction",
+        "ConstructionTech",
+        "Robotics",
+        "AEC"
+      ]
+    },
+    {
+      "id": 6,
+      "slug": "ai-era-bim-deliverables-kr",
+      "title": "AI 시대에도 도면은 필요할까? — BIM과 ‘납품물’의 재정의",
+      "date": "2026-02-03",
+      "excerpt": "BIM은 표준이 되어가지만, 대부분의 프로젝트는 결국 2D 도면으로 끝난다. AI와 로봇이 시공에 참여하는 시대, 도면 중심의 납품물은 계속 필요할까?",
+      "thumbnail": "/blog/posts/thumbs/ai-era-bim-deliverables-kr.svg",
+      "tags": [
+        "BIM",
+        "AI",
+        "건설",
+        "디지털전환",
+        "건설로봇",
+        "AEC",
+        "스마트건설"
+      ]
+    },
+    {
       "id": 5,
       "slug": "seungvis-lab-intro",
       "title": "승비스(SENGVIS) 자유 실험실 소개: BIM·AI·자동화 기록",
