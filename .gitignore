@@ -16,3 +16,7 @@ __pycache__/
 node_modules/
 dist/
 build/
+
+# Allow vendored browser deps under vendor/
+!vendor/**
+
