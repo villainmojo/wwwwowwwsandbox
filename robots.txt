@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bimarchi-pg.com/sitemap.xml
+Sitemap: https://www.bimarchi-pg.com/sitemap.xml

@@ -32,7 +32,7 @@ SITEMAP_XML = os.path.join(ROOT, "sitemap.xml")
 ROBOTS_TXT = os.path.join(ROOT, "robots.txt")
 TEMPLATE = os.path.join(BLOG_DIR, "templates", "post-page.html")
 
-SITE = "https://bimarchi-pg.com"
+SITE = "https://www.bimarchi-pg.com"
 BLOG_TITLE = "자유 실험실 | 부업·AI·봇·자동화·취미"
 BLOG_DESC = "자유 실험실 — 부업·AI·봇·자동화·취미를 기록하는 블로그"
 
@@ -198,7 +198,7 @@ def build_sitemap(posts):
 
 def build_robots():
     open(ROBOTS_TXT, "w", encoding="utf-8").write(
-        "User-agent: *\nAllow: /\n\nSitemap: https://bimarchi-pg.com/sitemap.xml\n"
+        f"User-agent: *\nAllow: /\n\nSitemap: {SITE}/sitemap.xml\n"
     )
 
 

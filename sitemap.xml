@@ -1,52 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://bimarchi-pg.com/</loc>
+    <loc>https://www.bimarchi-pg.com/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/</loc>
+    <loc>https://www.bimarchi-pg.com/blog/</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/about/</loc>
+    <loc>https://www.bimarchi-pg.com/blog/about/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/privacy/</loc>
+    <loc>https://www.bimarchi-pg.com/blog/privacy/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/contact/</loc>
+    <loc>https://www.bimarchi-pg.com/blog/contact/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/rss.xml</loc>
+    <loc>https://www.bimarchi-pg.com/blog/rss.xml</loc>
     <changefreq>daily</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/4/</loc>
+    <loc>https://www.bimarchi-pg.com/blog/4/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/3/</loc>
+    <loc>https://www.bimarchi-pg.com/blog/3/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/2/</loc>
+    <loc>https://www.bimarchi-pg.com/blog/2/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://bimarchi-pg.com/blog/1/</loc>
+    <loc>https://www.bimarchi-pg.com/blog/1/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
