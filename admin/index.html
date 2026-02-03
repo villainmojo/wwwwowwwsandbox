@@ -133,6 +133,34 @@
             await loadBlogPosts();
         }
 
+        
+
+        async function loadBlogTraffic(){
+            try{
+                setBlogStatus('트래픽 불러오는 중…');
+                const data = await apiAdmin('/api/admin/blog/traffic');
+                document.getElementById('blogTraffic').style.display = 'block';
+                document.getElementById('blogTodayHits').textContent = data.todayHits;
+                document.getElementById('blogHourHits').textContent = data.hourHits;
+                document.getElementById('blogUniqueIps').textContent = data.uniqueIps;
+
+                const top = (data.topPages||[]);
+                const box = document.getElementById('blogTopPages');
+                box.innerHTML = top.length ? ('<div style="display:flex; flex-direction:column; gap:6px;">' + top.map(x=>{
+                    const p = x.path || '';
+                    return `<div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid rgba(255,255,255,0.06); padding:6px 0;">`+
+                           `<a href="${p}" target="_blank" rel="noopener noreferrer" style="color:#9ecbff; text-decoration:none;">${p}</a>`+
+                           `<span style="opacity:.8">${x.hits}</span>`+
+                           `</div>`;
+                }).join('') + '</div>') : '<div style="opacity:.7">데이터 없음</div>';
+
+                setBlogStatus('트래픽 로드 완료');
+            }catch(e){
+                alert('블로그 트래픽 로드 실패: ' + e.message);
+                setBlogStatus('');
+            }
+        }
+
         async function publishBlog(){
             if(!confirm('발행하면 사이트(/blog)에 반영됩니다. 진행할까요?')) return;
             setBlogStatus('발행 중… (최대 20초)');
@@ -267,6 +295,34 @@
             await apiAdmin('/api/admin/blog/post', {method:'POST', body: JSON.stringify({slug, md})});
             setBlogStatus('저장 완료 (발행 필요)');
             await loadBlogPosts();
+        }
+
+        
+
+        async function loadBlogTraffic(){
+            try{
+                setBlogStatus('트래픽 불러오는 중…');
+                const data = await apiAdmin('/api/admin/blog/traffic');
+                document.getElementById('blogTraffic').style.display = 'block';
+                document.getElementById('blogTodayHits').textContent = data.todayHits;
+                document.getElementById('blogHourHits').textContent = data.hourHits;
+                document.getElementById('blogUniqueIps').textContent = data.uniqueIps;
+
+                const top = (data.topPages||[]);
+                const box = document.getElementById('blogTopPages');
+                box.innerHTML = top.length ? ('<div style="display:flex; flex-direction:column; gap:6px;">' + top.map(x=>{
+                    const p = x.path || '';
+                    return `<div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid rgba(255,255,255,0.06); padding:6px 0;">`+
+                           `<a href="${p}" target="_blank" rel="noopener noreferrer" style="color:#9ecbff; text-decoration:none;">${p}</a>`+
+                           `<span style="opacity:.8">${x.hits}</span>`+
+                           `</div>`;
+                }).join('') + '</div>') : '<div style="opacity:.7">데이터 없음</div>';
+
+                setBlogStatus('트래픽 로드 완료');
+            }catch(e){
+                alert('블로그 트래픽 로드 실패: ' + e.message);
+                setBlogStatus('');
+            }
         }
 
         async function publishBlog(){
@@ -490,6 +546,34 @@
             await loadBlogPosts();
         }
 
+        
+
+        async function loadBlogTraffic(){
+            try{
+                setBlogStatus('트래픽 불러오는 중…');
+                const data = await apiAdmin('/api/admin/blog/traffic');
+                document.getElementById('blogTraffic').style.display = 'block';
+                document.getElementById('blogTodayHits').textContent = data.todayHits;
+                document.getElementById('blogHourHits').textContent = data.hourHits;
+                document.getElementById('blogUniqueIps').textContent = data.uniqueIps;
+
+                const top = (data.topPages||[]);
+                const box = document.getElementById('blogTopPages');
+                box.innerHTML = top.length ? ('<div style="display:flex; flex-direction:column; gap:6px;">' + top.map(x=>{
+                    const p = x.path || '';
+                    return `<div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid rgba(255,255,255,0.06); padding:6px 0;">`+
+                           `<a href="${p}" target="_blank" rel="noopener noreferrer" style="color:#9ecbff; text-decoration:none;">${p}</a>`+
+                           `<span style="opacity:.8">${x.hits}</span>`+
+                           `</div>`;
+                }).join('') + '</div>') : '<div style="opacity:.7">데이터 없음</div>';
+
+                setBlogStatus('트래픽 로드 완료');
+            }catch(e){
+                alert('블로그 트래픽 로드 실패: ' + e.message);
+                setBlogStatus('');
+            }
+        }
+
         async function publishBlog(){
             if(!confirm('발행하면 사이트(/blog)에 반영됩니다. 진행할까요?')) return;
             setBlogStatus('발행 중… (최대 20초)');
@@ -622,11 +706,21 @@
         <div class="panel" id="blog">
             <h2>블로그 글 관리</h2>
             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+                <button class="btn btn-primary" onclick="loadBlogTraffic()">📈 블로그 트래픽</button>
                 <button class="btn btn-primary" onclick="loadBlogPosts()">🔄 목록 새로고침</button>
                 <button class="btn btn-primary" onclick="newBlogPost()">➕ 새 글</button>
                 <button class="btn btn-primary" onclick="saveBlogPost()">💾 저장</button>
                 <button class="btn btn-primary" onclick="publishBlog()">🚀 발행(사이트 반영)</button>
                 <span id="blogStatus" style="opacity:.8"></span>
+            </div>
+            <div id="blogTraffic" style="display:none; background: rgba(255,255,255,0.03); border-radius:12px; padding:12px; margin-bottom:12px;">
+              <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                <div class="stat-card" style="flex:1; min-width:150px;"><div class="value" id="blogTodayHits">-</div><div class="label">블로그 오늘 PV</div></div>
+                <div class="stat-card" style="flex:1; min-width:150px;"><div class="value" id="blogHourHits">-</div><div class="label">최근 1시간 PV</div></div>
+                <div class="stat-card" style="flex:1; min-width:150px;"><div class="value" id="blogUniqueIps">-</div><div class="label">오늘 UV(IP)</div></div>
+              </div>
+              <div style="margin-top:12px; font-size:12px; opacity:.8;">오늘 인기 페이지</div>
+              <div id="blogTopPages" style="margin-top:8px;"></div>
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 2fr; gap:14px; align-items:start;">
@@ -1019,6 +1113,34 @@
             await apiAdmin('/api/admin/blog/post', {method:'POST', body: JSON.stringify({slug, md})});
             setBlogStatus('저장 완료 (발행 필요)');
             await loadBlogPosts();
+        }
+
+        
+
+        async function loadBlogTraffic(){
+            try{
+                setBlogStatus('트래픽 불러오는 중…');
+                const data = await apiAdmin('/api/admin/blog/traffic');
+                document.getElementById('blogTraffic').style.display = 'block';
+                document.getElementById('blogTodayHits').textContent = data.todayHits;
+                document.getElementById('blogHourHits').textContent = data.hourHits;
+                document.getElementById('blogUniqueIps').textContent = data.uniqueIps;
+
+                const top = (data.topPages||[]);
+                const box = document.getElementById('blogTopPages');
+                box.innerHTML = top.length ? ('<div style="display:flex; flex-direction:column; gap:6px;">' + top.map(x=>{
+                    const p = x.path || '';
+                    return `<div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid rgba(255,255,255,0.06); padding:6px 0;">`+
+                           `<a href="${p}" target="_blank" rel="noopener noreferrer" style="color:#9ecbff; text-decoration:none;">${p}</a>`+
+                           `<span style="opacity:.8">${x.hits}</span>`+
+                           `</div>`;
+                }).join('') + '</div>') : '<div style="opacity:.7">데이터 없음</div>';
+
+                setBlogStatus('트래픽 로드 완료');
+            }catch(e){
+                alert('블로그 트래픽 로드 실패: ' + e.message);
+                setBlogStatus('');
+            }
         }
 
         async function publishBlog(){
