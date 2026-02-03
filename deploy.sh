@@ -13,4 +13,11 @@ rsync -av --delete \
   --exclude 'api/' \
   "${SRC_DIR}/" "${DEST_DIR}/"
 
+echo "Running post-deploy verification (warn-only)…"
+if command -v python3 >/dev/null 2>&1; then
+  python3 "${SRC_DIR}/blog/tools/verify_deploy.py" || true
+else
+  echo "[verify] python3 not found; skipping"
+fi
+
 echo "Done."

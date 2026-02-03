@@ -21,6 +21,14 @@ Update it whenever the user gives instructions about:
 - Destination: `/var/www/sengvis-playground`
 - Excludes: `.git/`, `.github/`, `api/`
 
+### 2.1.1 Post-deploy verification (warn-only)
+- Script: `/root/wwwwowwwsandbox/blog/tools/verify_deploy.py`
+- Runs automatically at end of `deploy.sh`
+- Checks:
+  - Origin first (http://127.0.0.1 with Host header) to bypass CDN cache
+  - Public domain next (HTTPS)
+- NOTE: Cloudflare may return 403 to non-browser clients; verifier treats 403 as reachable (OK)
+
 ### 2.2 Standard deploy steps
 1) Make changes in `/root/wwwwowwwsandbox`
 2) Run:
@@ -28,7 +36,8 @@ Update it whenever the user gives instructions about:
    cd /root/wwwwowwwsandbox
    ./deploy.sh
    ```
-3) Verify live files contain expected markers:
+3) Deploy script includes **post-deploy verification** (warn-only).
+4) Optional manual marker check:
    ```bash
    rg -n "nav-blog|blog-feature|자유실험실 블로그" /var/www/sengvis-playground/v2home/index.html
    ```
