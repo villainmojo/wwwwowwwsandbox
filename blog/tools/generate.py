@@ -127,9 +127,28 @@ def write_svg_thumb(path: str, title: str):
     open(path, "w", encoding="utf-8").write(svg)
 
 
-def render_post_page(slug: str, title: str, pid: int):
+def render_post_page(slug: str, title: str, pid: int, desc: str, og_image: str):
     tpl = open(TEMPLATE, "r", encoding="utf-8").read()
-    out = tpl.replace("{{SLUG}}", slug).replace("{{TITLE}}", html.escape(title))
+
+    canonical = f"{SITE}/blog/{pid}/"
+    safe_title = html.escape(title)
+    safe_desc = html.escape((desc or "").strip()[:180])
+
+    # og image: absolute URL
+    og = og_image or ""
+    if og.startswith('/'):
+        og = SITE + og
+    if not og.startswith('http'):
+        og = f"{SITE}/favicon.svg"
+
+    out = (tpl
+        .replace("{{SLUG}}", slug)
+        .replace("{{TITLE}}", safe_title)
+        .replace("{{DESCRIPTION}}", safe_desc)
+        .replace("{{CANONICAL_URL}}", canonical)
+        .replace("{{OG_IMAGE}}", og)
+    )
+
     out_dir = os.path.join(BLOG_DIR, str(pid))
     ensure_dir(out_dir)
     open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8").write(out)
@@ -275,7 +294,7 @@ def main():
             "tags": tags,
         })
 
-        render_post_page(slug, title, pid)
+        render_post_page(slug, title, pid, excerpt, thumb)
 
     # newest first
     posts.sort(key=lambda x: (x.get('date',''), x.get('id',0)), reverse=True)

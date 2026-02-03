@@ -3,7 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>Moltbot으로 코인 거래 자동화하기: 중요한 포인트만 정리 · 자유 실험실 | 부업·AI·봇·자동화·취미</title>
+  <meta name="description" content="자동매매는 ‘수익’보다 ‘사고 방지’가 먼저입니다. Moltbot을 활용할 때 반드시 챙겨야 할 안전장치·구조·운영 팁을 정리합니다." />
+  <link rel="canonical" href="https://www.bimarchi-pg.com/blog/3/" />
+
+  <!-- OpenGraph / Social -->
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="자유 실험실" />
+  <meta property="og:title" content="Moltbot으로 코인 거래 자동화하기: 중요한 포인트만 정리" />
+  <meta property="og:description" content="자동매매는 ‘수익’보다 ‘사고 방지’가 먼저입니다. Moltbot을 활용할 때 반드시 챙겨야 할 안전장치·구조·운영 팁을 정리합니다." />
+  <meta property="og:url" content="https://www.bimarchi-pg.com/blog/3/" />
+  <meta property="og:image" content="https://www.bimarchi-pg.com/blog/posts/thumbs/moltbot-coin-trading-automation.jpg" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Moltbot으로 코인 거래 자동화하기: 중요한 포인트만 정리" />
+  <meta name="twitter:description" content="자동매매는 ‘수익’보다 ‘사고 방지’가 먼저입니다. Moltbot을 활용할 때 반드시 챙겨야 할 안전장치·구조·운영 팁을 정리합니다." />
+  <meta name="twitter:image" content="https://www.bimarchi-pg.com/blog/posts/thumbs/moltbot-coin-trading-automation.jpg" />
+
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/blog/assets/blog.css" />
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml" />
@@ -83,55 +100,6 @@
         })()
       })
 
-      ;(async ()=>{
-        const slug = 'moltbot-coin-trading-automation';
-        const res = await fetch(`/blog/posts/${slug}.md`);
-      if(!res.ok){ document.getElementById('post').innerHTML = '<div class="notice">글을 불러오지 못했습니다.</div>'; return; }
-      const md = await res.text();
-
-      // frontmatter parse (same logic)
-      function parseFrontmatter(md){
-        if(!md.startsWith('---')) return {meta:{}, body: md}
-        const end = md.indexOf('\n---', 3)
-        if(end === -1) return {meta:{}, body: md}
-        const fm = md.slice(3, end).trim()
-        const body = md.slice(end + 4).trimStart()
-        const meta = {}
-        fm.split('\n').forEach(line=>{
-          const idx=line.indexOf(':')
-          if(idx===-1) return
-          const k=line.slice(0,idx).trim()
-          const v=line.slice(idx+1).trim()
-          if(v.startsWith('[') && v.endsWith(']')) meta[k]=v.slice(1,-1).split(',').map(s=>s.trim()).filter(Boolean)
-          else meta[k]=v
-        })
-        return {meta, body}
-      }
-      function fmtDate(iso){
-        try{ return new Date(iso).toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}) }catch{ return iso }
-      }
-      function normalizeTags(tags){
-        if(!tags) return []
-        if(Array.isArray(tags)) return tags
-        return String(tags).split(',').map(s=>s.trim()).filter(Boolean)
-      }
-
-      const {meta, body} = parseFrontmatter(md);
-      const title = meta.title || slug;
-      const date = meta.date ? fmtDate(meta.date) : '';
-      const tags = normalizeTags(meta.tags);
-
-      document.getElementById('title').textContent = title;
-      document.getElementById('date').textContent = date;
-      document.title = `${title} · 자유 실험실 | 부업·AI·봇·자동화·취미`;
-      document.getElementById('tags').innerHTML = tags.map(t=>`<a class="tag" href="/blog/?tag=${encodeURIComponent(t)}">#${t}</a>`).join('');
-
-      await waitFor(()=>window.marked && typeof window.marked.parse === 'function');
-      document.getElementById('content').innerHTML = window.marked.parse(body, {mangle:false, headerIds:false});
-
-      // performance: lazy-load images
-      document.querySelectorAll('#content img').forEach(img=>{ img.loading = 'lazy'; img.decoding = 'async' });
-
       function setCStatus(msg){
         const el = document.getElementById('cStatus');
         if(el) el.textContent = msg || '';
@@ -173,15 +141,14 @@
             const el = document.createElement('div');
             el.className='comment';
             el.innerHTML = `
-              <div class="head">
-                <div class="name">${escapeText(c.name)}</div>
-                <div class="time">${(c.updatedAt ? '수정됨 · ' : '')}${(c.createdAt||'').slice(0,16).replace('T',' ')}</div>
-              </div>
-              <div class="body">${c.content||''}</div>
-              <div class="actions">
-                <button class="cbtn" data-act="edit">수정</button>
-                <button class="cbtn" data-act="del">삭제</button>
-                ${admin ? '<span class="hint">관리자</span>' : ''}
+              <div class="rowline">
+                <div class="col name">${escapeText(c.name)}</div>
+                <div class="col body">${c.content||''}</div>
+                <div class="col time">${(c.updatedAt ? '수정 ' : '')}${(c.createdAt||'').slice(0,16).replace('T',' ')}</div>
+                <div class="col actions">
+                  <button class="cbtn" data-act="edit">수정</button>
+                  <button class="cbtn danger" data-act="del">삭제</button>
+                </div>
               </div>
             `;
             el.querySelector('[data-act="edit"]').onclick = async ()=>{
@@ -236,79 +203,132 @@
         }catch(e){ setCStatus('등록 실패: '+e.message) }
       }
 
+      ;(async ()=>{
+        const slug = 'moltbot-coin-trading-automation';
+        const res = await fetch(`/blog/posts/${slug}.md`);
+        if(!res.ok){ document.getElementById('post').innerHTML = '<div class="notice">글을 불러오지 못했습니다.</div>'; return; }
+        const md = await res.text();
 
-      // Prev/Next + Related
-      try{
-        const idxRes = await fetch('/blog/posts/index.json');
-        if(idxRes.ok){
-          const data = await idxRes.json();
-          const posts = data.posts || [];
-          const i = posts.findIndex(p=>String(p.slug)===String(slug));
+        // frontmatter parse
+        function parseFrontmatter(md){
+          if(!md.startsWith('---')) return {meta:{}, body: md}
+          const end = md.indexOf('\n---', 3)
+          if(end === -1) return {meta:{}, body: md}
+          const fm = md.slice(3, end).trim()
+          const body = md.slice(end + 4).trimStart()
+          const meta = {}
+          fm.split('\n').forEach(line=>{
+            const idx=line.indexOf(':')
+            if(idx===-1) return
+            const k=line.slice(0,idx).trim()
+            const v=line.slice(idx+1).trim()
+            if(v.startsWith('[') && v.endsWith(']')) meta[k]=v.slice(1,-1).split(',').map(s=>s.trim()).filter(Boolean)
+            else meta[k]=v
+          })
+          return {meta, body}
+        }
+        function fmtDate(iso){
+          try{ return new Date(iso).toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}) }catch{ return iso }
+        }
+        function normalizeTags(tags){
+          if(!tags) return []
+          if(Array.isArray(tags)) return tags
+          return String(tags).split(',').map(s=>s.trim()).filter(Boolean)
+        }
 
-          // comments (postId)
-          const postId = (i >= 0 && posts[i]) ? posts[i].id : null;
-          if(postId){
-            document.getElementById('cSubmit').onclick = ()=>submitComment(postId);
-            renderComments(postId);
-          }
+        const {meta, body} = parseFrontmatter(md);
+        const title = meta.title || slug;
+        const date = meta.date ? fmtDate(meta.date) : '';
+        const tags = normalizeTags(meta.tags);
 
+        document.getElementById('title').textContent = title;
+        document.getElementById('date').textContent = date;
+        document.title = `${title} · 자유 실험실 | 부업·AI·봇·자동화·취미`;
+        document.getElementById('tags').innerHTML = tags.map(t=>`<a class="tag" href="/blog/?tag=${encodeURIComponent(t)}">#${t}</a>`).join('');
 
-          // newest-first index
-          const newer = i>0 ? posts[i-1] : null;
-          const older = (i>=0 && i<posts.length-1) ? posts[i+1] : null;
+        await waitFor(()=>window.marked && typeof window.marked.parse === 'function');
+        document.getElementById('content').innerHTML = window.marked.parse(body, {mangle:false, headerIds:false});
+        document.querySelectorAll('#content img').forEach(img=>{ img.loading = 'lazy'; img.decoding = 'async' });
 
-          const extras = document.getElementById('extras');
-          const navRow = document.getElementById('navRow');
-          const prevA = document.getElementById('prevLink');
-          const nextA = document.getElementById('nextLink');
+        try{
+          const idxRes = await fetch('/blog/posts/index.json');
+          if(idxRes.ok){
+            const data = await idxRes.json();
+            const posts = data.posts || [];
+            const i = posts.findIndex(p=>String(p.slug)===String(slug));
 
-          if(newer){
-            nextA.style.display='';
-            nextA.href = `/blog/${encodeURIComponent(String(newer.id))}/`;
-            nextA.querySelector('.ttl').textContent = newer.title;
-          }
-          if(older){
-            prevA.style.display='';
-            prevA.href = `/blog/${encodeURIComponent(String(older.id))}/`;
-            prevA.querySelector('.ttl').textContent = older.title;
-          }
-          if(newer || older){
-            extras.style.display='';
-            navRow.style.display='';
-          }
+            // comments (postId)
+            const postId = (i >= 0 && posts[i]) ? posts[i].id : null;
+            if(postId){
+              document.getElementById('cSubmit').onclick = ()=>submitComment(postId);
+              renderComments(postId);
+            }
 
-          // related below
+            const newer = i>0 ? posts[i-1] : null;
+            const older = (i>=0 && i<posts.length-1) ? posts[i+1] : null;
 
-          const rel = document.getElementById('related');
-          if(tags.length){
-            const tagSet = new Set(tags.map(t=>String(t).toLowerCase()));
-            const related = posts
-              .filter(p=>String(p.slug)!==String(slug))
-              .map(p=>({
-                p,
-                score: normalizeTags(p.tags).reduce((acc,t)=>acc + (tagSet.has(String(t).toLowerCase()) ? 1 : 0), 0)
-              }))
-              .filter(x=>x.score>0)
-              .sort((a,b)=>b.score-a.score)
-              .slice(0, 6)
-              .map(x=>x.p);
-            if(related.length){
-              rel.style.display='';
-              rel.innerHTML = `
-                <h3>관련 글</h3>
-                <ul>
-                  ${related.map(p=>`<li><a href="/blog/${encodeURIComponent(String(p.id))}/">${p.title}</a></li>`).join('')}
-                </ul>
-              `;
+            const extras = document.getElementById('extras');
+            const navRow = document.getElementById('navRow');
+            const prevA = document.getElementById('prevLink');
+            const nextA = document.getElementById('nextLink');
+
+            if(newer){
+              nextA.style.display='';
+              nextA.href = `/blog/${encodeURIComponent(String(newer.id))}/`;
+              nextA.querySelector('.ttl').textContent = newer.title;
+            }
+            if(older){
+              prevA.style.display='';
+              prevA.href = `/blog/${encodeURIComponent(String(older.id))}/`;
+              prevA.querySelector('.ttl').textContent = older.title;
+            }
+            if(newer || older){
+              extras.style.display='';
+              navRow.style.display='';
+            }
+
+            const rel = document.getElementById('related');
+            const recoBox = document.getElementById('recoBox');
+            if(tags.length){
+              const tagSet = new Set(tags.map(t=>String(t).toLowerCase()));
+              const related = posts
+                .filter(p=>String(p.slug)!==String(slug))
+                .map(p=>({
+                  p,
+                  score: normalizeTags(p.tags).reduce((acc,t)=>acc + (tagSet.has(String(t).toLowerCase()) ? 1 : 0), 0)
+                }))
+                .filter(x=>x.score>0)
+                .sort((a,b)=>b.score-a.score)
+                .slice(0, 6)
+                .map(x=>x.p);
+
+              if(related.length){
+                extras.style.display='';
+                recoBox.style.display='';
+                const cards = related.map(p=>{
+                  const url = `/blog/${encodeURIComponent(String(p.id))}/`;
+                  const thumb = p.thumbnail ? `<div class="rt"><img alt="" loading="lazy" decoding="async" src="${p.thumbnail}"></div>` : `<div class="rt"></div>`;
+                  return `
+                    <a class="reco-card" href="${url}">
+                      ${thumb}
+                      <div class="rb">
+                        <div class="t">${p.title}</div>
+                        <div class="m">${(p.date||'').slice(0,10)}</div>
+                      </div>
+                    </a>`
+                }).join('');
+                rel.innerHTML = cards;
+              }
             }
           }
-        }
-      }catch(e){ /* ignore */ }
-    })().catch(err=>{
-      console.error(err);
-      document.getElementById('content').innerHTML = '<div class="notice">글 렌더링 중 오류가 발생했습니다.</div>'
+        }catch(e){ /* ignore */ }
+
+      })().catch(err=>{
+        console.error(err);
+        document.getElementById('content').innerHTML = '<div class="notice">글 렌더링 중 오류가 발생했습니다.</div>'
+      });
+
     });
-  });
   </script>
 </body>
 </html>
