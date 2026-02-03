@@ -565,9 +565,10 @@
       const speed = Math.hypot(chassisBody.velocity.x, chassisBody.velocity.z);
       const tractionBoost = 1.0 + clamp(speed/18, 0, 0.35);
       let engine = 0;
-      // cannon-es RaycastVehicle: positive force generally drives forward along +forwardAxis
-      if(forward) engine = engineForceMax * tractionBoost;
-      if(back) engine = -engineForceMax * 0.65;
+      // RaycastVehicle forward axis direction can feel inverted depending on setup;
+      // keep user controls intuitive (W/↑ = forward).
+      if(forward) engine = -engineForceMax * tractionBoost;
+      if(back) engine = engineForceMax * 0.65;
 
       // Ensure body is awake when user inputs
       if(forward || back || steer || hb){
