@@ -1,6 +1,22 @@
 {
   "posts": [
     {
+      "id": 5,
+      "slug": "seungvis-lab-intro",
+      "title": "승비스(SENGVIS) 자유 실험실 소개: BIM·AI·자동화 기록",
+      "date": "2026-02-03",
+      "excerpt": "승비스(SENGVIS)가 운영하는 ‘자유 실험실’ 블로그 소개. BIM/건설, AI, 자동화, Moltbot 실험을 기록합니다.",
+      "thumbnail": "/blog/posts/thumbs/seungvis-lab-intro.svg",
+      "tags": [
+        "승비스",
+        "SENGVIS",
+        "BIM",
+        "AI",
+        "자동화",
+        "Moltbot"
+      ]
+    },
+    {
       "id": 4,
       "slug": "moltbot-intro",
       "title": "Moltbot 소개: ‘나만의 자동화 비서’를 직접 운영하는 방법",
