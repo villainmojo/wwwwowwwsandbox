@@ -250,6 +250,7 @@ def main():
 
         # Thumbnail policy
         # - If meta.thumbnail is a remote URL: download once into thumbs/<slug>.jpg
+        # - If meta.thumbnail is a local path (e.g. /blog/posts/media/...): use as-is
         # - Else if local thumbs/<slug>.jpg exists: use it
         # - Else: generate lightweight SVG placeholder (thumbs/<slug>.svg)
         thumb_meta = meta.get('thumbnail')
@@ -259,7 +260,11 @@ def main():
         thumb_svg_abs = os.path.join(THUMBS_DIR, f"{slug}.svg")
 
         thumb = thumb_jpg_rel
-        if thumb_meta and isinstance(thumb_meta, str) and is_http_url(thumb_meta):
+
+        # Respect explicit local thumbnail paths
+        if thumb_meta and isinstance(thumb_meta, str) and thumb_meta.startswith('/') and not is_http_url(thumb_meta):
+            thumb = thumb_meta
+        elif thumb_meta and isinstance(thumb_meta, str) and is_http_url(thumb_meta):
             if not os.path.exists(thumb_jpg_abs):
                 try:
                     download_thumb(thumb_meta, thumb_jpg_abs)
