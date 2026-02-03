@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Drift (MVP) · SENGVIS Playground</title>
+  <meta name="description" content="3D 드리프트 자동차 MVP — Three.js + cannon-es" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #050510; overflow: hidden; font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', sans-serif; }
+    #hud {
+      position: fixed; top: 14px; left: 14px; z-index: 10;
+      color: rgba(255,255,255,0.92);
+      background: rgba(10,10,25,0.55);
+      border: 1px solid rgba(124,58,237,0.25);
+      border-radius: 14px;
+      padding: 12px 14px;
+      backdrop-filter: blur(10px);
+      max-width: min(520px, calc(100vw - 28px));
+    }
+    #hud h1 { margin: 0 0 6px; font-size: 14px; letter-spacing: 0.3px; }
+    #hud .row { display:flex; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+    #hud .stat { font-size: 12px; opacity: 0.9; }
+    #hud .hint { margin-top: 8px; font-size: 12px; color: rgba(220,220,255,0.78); line-height: 1.35; }
+    #hud kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+      font-size: 11px; padding: 2px 6px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.95);
+    }
+    #toast {
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+      z-index: 10;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: rgba(255,255,255,0.88);
+      font-size: 12px;
+      backdrop-filter: blur(10px);
+      display:none;
+    }
+    #overlay {
+      position: fixed; inset: 0; display:flex; align-items:center; justify-content:center;
+      z-index: 20;
+      background: radial-gradient(circle at 20% 10%, rgba(124,58,237,0.28), transparent 45%),
+                  radial-gradient(circle at 80% 20%, rgba(251,113,133,0.22), transparent 50%),
+                  rgba(0,0,0,0.78);
+      color: rgba(255,255,255,0.92);
+      text-align:center;
+      padding: 24px;
+    }
+    #overlay .card {
+      width: min(680px, 92vw);
+      background: rgba(10,10,25,0.65);
+      border: 1px solid rgba(124,58,237,0.28);
+      border-radius: 18px;
+      padding: 18px 18px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+    }
+    #overlay h2 { margin: 0 0 8px; font-size: 20px; }
+    #overlay p { margin: 0 0 14px; opacity: 0.85; line-height: 1.5; }
+    #overlay .btn {
+      display:inline-flex; gap:10px; align-items:center; justify-content:center;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 0;
+      background: linear-gradient(135deg, #7c3aed, #f472b6);
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 16px 50px rgba(124,58,237,0.35);
+    }
+    #overlay .btn:active { transform: translateY(1px); }
+    canvas { display:block; }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <h1>3D Drift (MVP)</h1>
+    <div class="row">
+      <div class="stat">속도: <b id="speed">0</b> km/h</div>
+      <div class="stat">드리프트: <b id="drift">0</b>°</div>
+      <div class="stat">점수: <b id="score">0</b></div>
+      <div class="stat">콤보: <b id="combo">x1</b></div>
+      <div class="stat">테마: <b id="theme">NEON</b></div>
+    </div>
+    <div class="hint">
+      <div><kbd>W</kbd>/<kbd>↑</kbd> 가속 · <kbd>S</kbd>/<kbd>↓</kbd> 브레이크/후진 · <kbd>A</kbd>/<kbd>←</kbd> <kbd>D</kbd>/<kbd>→</kbd> 조향</div>
+      <div><kbd>Space</kbd> 핸드브레이크(드리프트) · <kbd>R</kbd> 리셋 · <kbd>T</kbd> 테마 토글</div>
+    </div>
+  </div>
+  <div id="toast"></div>
+  <div id="overlay">
+    <div class="card">
+      <h2>3D 드리프트 — 핸들감 좋은 MVP</h2>
+      <p>
+        Three.js + cannon-es로 만든 테스트 빌드입니다. <br>
+        아케이드 느낌의 드리프트(슬립각 기반 점수)를 먼저 잡고, 이후 차량/서스펜션/트랙을 고도화합니다.
+      </p>
+      <button class="btn" id="startBtn">시작하기 (클릭)</button>
+      <p style="margin-top:12px; font-size:12px; opacity:0.7;">브라우저가 성능이 낮으면 그림자/후처리를 끄고 진행할 수 있어요.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+    import * as CANNON from 'https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js';
+
+    // -------------------------
+    // Helpers
+    // -------------------------
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const lerp = (a,b,t)=>a+(b-a)*t;
+
+    const hud = {
+      speed: document.getElementById('speed'),
+      drift: document.getElementById('drift'),
+      score: document.getElementById('score'),
+      combo: document.getElementById('combo'),
+      theme: document.getElementById('theme'),
+      toast: document.getElementById('toast'),
+      overlay: document.getElementById('overlay'),
+      startBtn: document.getElementById('startBtn'),
+    };
+
+    function showToast(msg, ms=1400){
+      hud.toast.textContent = msg;
+      hud.toast.style.display = 'block';
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(()=> hud.toast.style.display = 'none', ms);
+    }
+
+    // -------------------------
+    // Renderer / Scene
+    // -------------------------
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1200);
+    camera.position.set(0, 6, 12);
+
+    // Optional controls for debugging (disabled by default)
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enabled = false;
+
+    // Lights
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x1b1b2a, 0.55);
+    scene.add(hemi);
+
+    const sun = new THREE.DirectionalLight(0xffffff, 1.0);
+    sun.position.set(20, 30, 10);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 120;
+    sun.shadow.camera.left = -40;
+    sun.shadow.camera.right = 40;
+    sun.shadow.camera.top = 40;
+    sun.shadow.camera.bottom = -40;
+    scene.add(sun);
+
+    // Neon accents
+    const neon1 = new THREE.PointLight(0x7c3aed, 20, 40, 2);
+    neon1.position.set(-8, 2.5, -8);
+    scene.add(neon1);
+    const neon2 = new THREE.PointLight(0xfb7185, 18, 40, 2);
+    neon2.position.set(10, 2.0, 6);
+    scene.add(neon2);
+
+    // -------------------------
+    // Physics world
+    // -------------------------
+    const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
+    world.broadphase = new CANNON.SAPBroadphase(world);
+    world.allowSleep = true;
+
+    const matGround = new CANNON.Material('ground');
+    const matTire = new CANNON.Material('tire');
+
+    world.addContactMaterial(new CANNON.ContactMaterial(matGround, matTire, {
+      friction: 0.85,   // baseline grip (we'll tweak via handbrake)
+      restitution: 0.0,
+      contactEquationStiffness: 1e8,
+      contactEquationRelaxation: 3,
+      frictionEquationStiffness: 1e8,
+      frictionEquationRelaxation: 3,
+    }));
+
+    // Ground
+    const groundBody = new CANNON.Body({
+      type: CANNON.Body.STATIC,
+      material: matGround,
+      shape: new CANNON.Plane(),
+    });
+    groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+    world.addBody(groundBody);
+
+    const groundGeo = new THREE.PlaneGeometry(400, 400, 1, 1);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x101024, roughness: 0.95, metalness: 0.05 });
+    const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+    groundMesh.rotation.x = -Math.PI/2;
+    groundMesh.receiveShadow = true;
+    scene.add(groundMesh);
+
+    // Track lines (neon)
+    function addNeonRing(r=60, y=0.02, color=0x7c3aed){
+      const pts = [];
+      for(let i=0;i<=128;i++){
+        const a = (i/128)*Math.PI*2;
+        pts.push(new THREE.Vector3(Math.cos(a)*r, y, Math.sin(a)*r));
+      }
+      const g = new THREE.BufferGeometry().setFromPoints(pts);
+      const m = new THREE.LineBasicMaterial({ color, transparent:true, opacity:0.55 });
+      const line = new THREE.Line(g, m);
+      scene.add(line);
+    }
+    addNeonRing(55, 0.03, 0x7c3aed);
+    addNeonRing(58, 0.03, 0xfb7185);
+
+    // Simple walls (circle approximated by boxes)
+    function addWallRing(r=62, height=1.2, thickness=1.2, segments=24){
+      const wallMat = new CANNON.Material('wall');
+      world.addContactMaterial(new CANNON.ContactMaterial(matTire, wallMat, { friction: 0.1, restitution: 0.05 }));
+      world.addContactMaterial(new CANNON.ContactMaterial(matGround, wallMat, { friction: 0.2, restitution: 0.05 }));
+
+      for(let i=0;i<segments;i++){
+        const a = (i/segments)*Math.PI*2;
+        const x = Math.cos(a)*r;
+        const z = Math.sin(a)*r;
+        const yaw = -a;
+
+        const shape = new CANNON.Box(new CANNON.Vec3(thickness, height, 4));
+        const body = new CANNON.Body({ mass: 0, material: wallMat });
+        body.addShape(shape);
+        body.position.set(x, height, z);
+        body.quaternion.setFromEuler(0, yaw, 0);
+        world.addBody(body);
+
+        const mesh = new THREE.Mesh(
+          new THREE.BoxGeometry(thickness*2, height*2, 8),
+          new THREE.MeshStandardMaterial({ color: 0x1b1b2a, roughness: 0.8, metalness: 0.05 })
+        );
+        mesh.position.set(x, height, z);
+        mesh.rotation.y = yaw;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+
+        // add tiny neon strip
+        const strip = new THREE.Mesh(
+          new THREE.BoxGeometry(thickness*2.1, 0.06, 8.05),
+          new THREE.MeshStandardMaterial({ color: 0x7c3aed, emissive: 0x7c3aed, emissiveIntensity: 1.2, roughness:0.6, metalness:0.0 })
+        );
+        strip.position.set(x, height*2 - 0.08, z);
+        strip.rotation.y = yaw;
+        scene.add(strip);
+      }
+    }
+    addWallRing();
+
+    // -------------------------
+    // Vehicle (RaycastVehicle)
+    // -------------------------
+    const chassisShape = new CANNON.Box(new CANNON.Vec3(0.9, 0.35, 2.1));
+    const chassisBody = new CANNON.Body({ mass: 180, material: matTire });
+    chassisBody.addShape(chassisShape);
+    chassisBody.position.set(0, 1.1, 0);
+    chassisBody.angularDamping = 0.35;
+    world.addBody(chassisBody);
+
+    const vehicle = new CANNON.RaycastVehicle({
+      chassisBody,
+      indexRightAxis: 0,
+      indexUpAxis: 1,
+      indexForwardAxis: 2,
+    });
+
+    const wheelOptions = {
+      radius: 0.42,
+      directionLocal: new CANNON.Vec3(0, -1, 0),
+      suspensionStiffness: 30,
+      suspensionRestLength: 0.35,
+      frictionSlip: 6.0,      // baseline (we'll adjust for drift)
+      dampingRelaxation: 2.3,
+      dampingCompression: 4.5,
+      maxSuspensionForce: 1e5,
+      rollInfluence: 0.18,
+      axleLocal: new CANNON.Vec3(-1, 0, 0),
+      chassisConnectionPointLocal: new CANNON.Vec3(),
+      maxSuspensionTravel: 0.2,
+      customSlidingRotationalSpeed: -30,
+      useCustomSlidingRotationalSpeed: true,
+    };
+
+    const axleZ = 1.55;
+    const axleX = 0.95;
+    const wheelY = 0.15;
+
+    // Front-left
+    wheelOptions.chassisConnectionPointLocal.set(axleX, wheelY, axleZ);
+    vehicle.addWheel(wheelOptions);
+    // Front-right
+    wheelOptions.chassisConnectionPointLocal.set(-axleX, wheelY, axleZ);
+    vehicle.addWheel(wheelOptions);
+    // Rear-left
+    wheelOptions.chassisConnectionPointLocal.set(axleX, wheelY, -axleZ);
+    vehicle.addWheel(wheelOptions);
+    // Rear-right
+    wheelOptions.chassisConnectionPointLocal.set(-axleX, wheelY, -axleZ);
+    vehicle.addWheel(wheelOptions);
+
+    vehicle.addToWorld(world);
+
+    // Wheel bodies for visuals
+    const wheelMeshes = [];
+    const wheelGeo = new THREE.CylinderGeometry(wheelOptions.radius, wheelOptions.radius, 0.24, 20);
+    wheelGeo.rotateZ(Math.PI/2);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0b0b10, roughness: 0.85, metalness: 0.05 });
+
+    vehicle.wheelInfos.forEach(()=>{
+      const m = new THREE.Mesh(wheelGeo, wheelMat);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      scene.add(m);
+      wheelMeshes.push(m);
+    });
+
+    // Chassis visual
+    const chassisMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(1.9, 0.7, 4.3),
+      new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.35, metalness: 0.75 })
+    );
+    chassisMesh.castShadow = true;
+    chassisMesh.receiveShadow = true;
+    scene.add(chassisMesh);
+
+    // windshield/neon trim
+    const trim = new THREE.Mesh(
+      new THREE.BoxGeometry(1.92, 0.08, 2.2),
+      new THREE.MeshStandardMaterial({ color: 0x111827, emissive: 0x7c3aed, emissiveIntensity: 0.6, roughness:0.7, metalness:0.1 })
+    );
+    trim.position.y = 0.42;
+    chassisMesh.add(trim);
+
+    // -------------------------
+    // Controls (Arcade drift)
+    // -------------------------
+    const input = { fwd:false, back:false, left:false, right:false, handbrake:false };
+    const keys = new Set();
+
+    function onKey(e, down){
+      keys[down ? 'add' : 'delete'](e.code);
+      const k = e.code;
+      if(k==='KeyW' || k==='ArrowUp') input.fwd = down;
+      if(k==='KeyS' || k==='ArrowDown') input.back = down;
+      if(k==='KeyA' || k==='ArrowLeft') input.left = down;
+      if(k==='KeyD' || k==='ArrowRight') input.right = down;
+      if(k==='Space') input.handbrake = down;
+      if(down && k==='KeyR') resetCar();
+      if(down && k==='KeyT') toggleTheme();
+    }
+
+    window.addEventListener('keydown', (e)=>{ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); onKey(e,true) }, {passive:false});
+    window.addEventListener('keyup', (e)=>onKey(e,false));
+
+    // Touch controls (very minimal)
+    let touchSteer = 0;
+    let touchThrottle = 0;
+    let touchBrake = 0;
+
+    function isTouch(){ return 'ontouchstart' in window || navigator.maxTouchPoints > 0; }
+    if(isTouch()) showToast('모바일: 화면 왼쪽/오른쪽 터치 = 조향, 위/아래 스와이프 = 가속/브레이크', 2600);
+
+    window.addEventListener('touchstart', (e)=>{
+      if(e.touches.length===0) return;
+      const t = e.touches[0];
+      const x = t.clientX / window.innerWidth;
+      touchSteer = x < 0.5 ? -1 : 1;
+    }, {passive:true});
+    window.addEventListener('touchend', ()=>{ touchSteer = 0; touchThrottle = 0; touchBrake = 0; }, {passive:true});
+
+    // -------------------------
+    // Drift scoring
+    // -------------------------
+    let score = 0;
+    let combo = 1;
+    let driftTimer = 0;
+    let bestChain = 0;
+
+    function computeSlipAngleDeg(){
+      // slip angle between forward direction and velocity on XZ plane
+      const vel = chassisBody.velocity;
+      const speed = Math.hypot(vel.x, vel.z);
+      if(speed < 0.5) return 0;
+
+      const forward = new CANNON.Vec3(0,0,1);
+      chassisBody.quaternion.vmult(forward, forward);
+      const f = new THREE.Vector2(forward.x, forward.z).normalize();
+      const v = new THREE.Vector2(vel.x, vel.z).normalize();
+
+      let dot = clamp(f.dot(v), -1, 1);
+      const ang = Math.acos(dot) * 180/Math.PI;
+      // keep 0..90 meaningful
+      return clamp(ang, 0, 90);
+    }
+
+    // -------------------------
+    // Camera follow
+    // -------------------------
+    const camTarget = new THREE.Vector3();
+    const camPos = new THREE.Vector3();
+
+    // -------------------------
+    // Theme
+    // -------------------------
+    let themeMode = 'NEON'; // or 'DAY'
+
+    function applyTheme(){
+      if(themeMode==='NEON'){
+        scene.background = new THREE.Color(0x050510);
+        hemi.intensity = 0.55;
+        sun.intensity = 0.65;
+        neon1.intensity = 20;
+        neon2.intensity = 18;
+        groundMat.color.setHex(0x101024);
+        groundMat.roughness = 0.95;
+        chassisMesh.material.color.setHex(0xdddddd);
+        chassisMesh.material.metalness = 0.75;
+        chassisMesh.material.roughness = 0.35;
+        trim.material.emissiveIntensity = 0.6;
+      } else {
+        scene.background = new THREE.Color(0xbed9ff);
+        hemi.intensity = 0.9;
+        sun.intensity = 1.3;
+        neon1.intensity = 6;
+        neon2.intensity = 6;
+        groundMat.color.setHex(0x3b3b3b);
+        groundMat.roughness = 1.0;
+        chassisMesh.material.color.setHex(0x2b2b2f);
+        chassisMesh.material.metalness = 0.35;
+        chassisMesh.material.roughness = 0.55;
+        trim.material.emissiveIntensity = 0.35;
+      }
+      hud.theme.textContent = themeMode;
+      showToast(`테마: ${themeMode}`, 1000);
+    }
+
+    function toggleTheme(){
+      themeMode = (themeMode==='NEON') ? 'DAY' : 'NEON';
+      applyTheme();
+    }
+
+    applyTheme();
+
+    // -------------------------
+    // Reset
+    // -------------------------
+    function resetCar(){
+      chassisBody.velocity.set(0,0,0);
+      chassisBody.angularVelocity.set(0,0,0);
+      chassisBody.position.set(0, 1.1, 0);
+      chassisBody.quaternion.setFromEuler(0, Math.random()*Math.PI*2, 0);
+      score = 0; combo = 1; driftTimer = 0; bestChain = 0;
+      showToast('리셋', 900);
+    }
+
+    // -------------------------
+    // Start / pointer lock
+    // -------------------------
+    let running = false;
+    hud.startBtn.addEventListener('click', async ()=>{
+      hud.overlay.style.display = 'none';
+      running = true;
+      try{
+        await renderer.domElement.requestPointerLock?.();
+      }catch{}
+    });
+
+    // -------------------------
+    // Main loop
+    // -------------------------
+    let last = performance.now();
+    const fixedTimeStep = 1/60;
+    let accumulator = 0;
+
+    function step(now){
+      requestAnimationFrame(step);
+      const dt = Math.min(0.033, (now - last)/1000);
+      last = now;
+      if(!running){
+        renderer.render(scene, camera);
+        return;
+      }
+
+      // Inputs -> controls
+      const steerInput = (input.left ? 1 : 0) - (input.right ? 1 : 0) + touchSteer;
+      const steer = clamp(steerInput, -1, 1);
+
+      const maxSteerVal = 0.42;
+      const engineForceMax = 2200;
+      const brakeForce = 14;
+
+      const forward = input.fwd ? 1 : 0;
+      const back = input.back ? 1 : 0;
+
+      // Steering on front wheels
+      vehicle.setSteeringValue(steer * maxSteerVal, 0);
+      vehicle.setSteeringValue(steer * maxSteerVal, 1);
+
+      // Engine force on rear wheels (RWD for drift feel)
+      const speed = Math.hypot(chassisBody.velocity.x, chassisBody.velocity.z);
+      const tractionBoost = 1.0 + clamp(speed/18, 0, 0.35);
+      let engine = 0;
+      if(forward) engine = -engineForceMax * tractionBoost;
+      if(back) engine = engineForceMax * 0.65;
+
+      vehicle.applyEngineForce(engine, 2);
+      vehicle.applyEngineForce(engine, 3);
+
+      // Brake
+      const braking = back && speed > 1.5 ? brakeForce : 0;
+      vehicle.setBrake(braking, 0);
+      vehicle.setBrake(braking, 1);
+      vehicle.setBrake(braking, 2);
+      vehicle.setBrake(braking, 3);
+
+      // Handbrake = reduce rear friction to induce drift
+      const hb = input.handbrake;
+      vehicle.wheelInfos.forEach((w, i)=>{
+        const isRear = i>=2;
+        const base = 6.0;
+        const target = hb && isRear ? 2.1 : base;
+        w.frictionSlip = lerp(w.frictionSlip, target, 0.25);
+      });
+
+      // Physics step
+      accumulator += dt;
+      while(accumulator >= fixedTimeStep){
+        world.step(fixedTimeStep);
+        accumulator -= fixedTimeStep;
+      }
+
+      // Sync visuals
+      chassisMesh.position.copy(chassisBody.position);
+      chassisMesh.quaternion.copy(chassisBody.quaternion);
+
+      for(let i=0;i<vehicle.wheelInfos.length;i++){
+        vehicle.updateWheelTransform(i);
+        const t = vehicle.wheelInfos[i].worldTransform;
+        wheelMeshes[i].position.copy(t.position);
+        wheelMeshes[i].quaternion.copy(t.quaternion);
+      }
+
+      // Camera follow (third-person chase)
+      const forwardDir = new THREE.Vector3(0,0,1).applyQuaternion(chassisMesh.quaternion).normalize();
+      camTarget.copy(chassisMesh.position).add(new THREE.Vector3(0, 1.0, 0));
+      camPos.copy(chassisMesh.position)
+        .add(new THREE.Vector3(0, 3.4, 0))
+        .add(forwardDir.clone().multiplyScalar(-10.5));
+      camera.position.lerp(camPos, 0.08);
+      camera.lookAt(camTarget);
+
+      // Drift scoring
+      const slipDeg = computeSlipAngleDeg();
+      const kmh = speed * 3.6;
+
+      const drifting = kmh > 18 && slipDeg > 12;
+      if(drifting){
+        driftTimer += dt;
+        const baseGain = (slipDeg/35) * (kmh/80);
+        score += Math.floor( (20 + baseGain * 160) * combo * dt );
+        if(driftTimer > 1.1){
+          combo = clamp(1 + Math.floor(driftTimer/1.2), 1, 10);
+          bestChain = Math.max(bestChain, combo);
+        }
+      } else {
+        if(driftTimer > 0.6){
+          showToast(`드리프트 종료 · 콤보 x${bestChain}`, 1100);
+        }
+        driftTimer = 0;
+        combo = 1;
+        bestChain = 0;
+      }
+
+      // HUD
+      hud.speed.textContent = Math.round(kmh);
+      hud.drift.textContent = Math.round(slipDeg);
+      hud.score.textContent = String(score);
+      hud.combo.textContent = `x${combo}`;
+
+      renderer.render(scene, camera);
+    }
+
+    requestAnimationFrame(step);
+
+    // Resize
+    window.addEventListener('resize', ()=>{
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Safety: stop on visibility change
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.hidden) running = false;
+    });
+
+  </script>
+</body>
+</html>
