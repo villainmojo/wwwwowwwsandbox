@@ -225,12 +225,13 @@
     const matTire = new CANNON.Material('tire');
 
     world.addContactMaterial(new CANNON.ContactMaterial(matGround, matTire, {
-      friction: 0.85,   // baseline grip (we'll tweak via handbrake)
+      friction: 0.9,   // baseline grip
       restitution: 0.0,
-      contactEquationStiffness: 1e8,
-      contactEquationRelaxation: 3,
-      frictionEquationStiffness: 1e8,
-      frictionEquationRelaxation: 3,
+      // Too-stiff equations can feel "jerky" on some devices; soften a bit.
+      contactEquationStiffness: 1e7,
+      contactEquationRelaxation: 4,
+      frictionEquationStiffness: 1e7,
+      frictionEquationRelaxation: 4,
     }));
 
     // Ground
@@ -327,7 +328,7 @@
       directionLocal: new CANNON.Vec3(0, -1, 0),
       suspensionStiffness: 30,
       suspensionRestLength: 0.35,
-      frictionSlip: 6.0,      // baseline (we'll adjust for drift)
+      frictionSlip: 7.5,      // baseline (we'll adjust for drift)
       dampingRelaxation: 2.3,
       dampingCompression: 4.5,
       maxSuspensionForce: 1e5,
@@ -550,8 +551,8 @@
       const steer = clamp(steerInput, -1, 1);
 
       const maxSteerVal = 0.42;
-      const engineForceMax = 2200;
-      const brakeForce = 14;
+      const engineForceMax = 4200; // stronger for desktop/mobile
+      const brakeForce = 18;
 
       const forward = input.fwd ? 1 : 0;
       const back = input.back ? 1 : 0;
@@ -564,8 +565,14 @@
       const speed = Math.hypot(chassisBody.velocity.x, chassisBody.velocity.z);
       const tractionBoost = 1.0 + clamp(speed/18, 0, 0.35);
       let engine = 0;
-      if(forward) engine = -engineForceMax * tractionBoost;
-      if(back) engine = engineForceMax * 0.65;
+      // cannon-es RaycastVehicle: positive force generally drives forward along +forwardAxis
+      if(forward) engine = engineForceMax * tractionBoost;
+      if(back) engine = -engineForceMax * 0.65;
+
+      // Ensure body is awake when user inputs
+      if(forward || back || steer || hb){
+        chassisBody.wakeUp();
+      }
 
       vehicle.applyEngineForce(engine, 2);
       vehicle.applyEngineForce(engine, 3);
@@ -581,9 +588,10 @@
       const hb = input.handbrake;
       vehicle.wheelInfos.forEach((w, i)=>{
         const isRear = i>=2;
-        const base = 6.0;
-        const target = hb && isRear ? 2.1 : base;
-        w.frictionSlip = lerp(w.frictionSlip, target, 0.25);
+        const base = 7.5;
+        // handbrake reduces rear grip but not to zero (avoid jittery locking)
+        const target = hb && isRear ? 3.8 : base;
+        w.frictionSlip = lerp(w.frictionSlip, target, 0.22);
       });
 
       // Physics step
