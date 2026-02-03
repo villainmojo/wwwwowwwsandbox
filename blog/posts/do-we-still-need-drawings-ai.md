@@ -1,5 +1,5 @@
 ---
-title: Do We Still Need Drawings in the Age of AI?
+title: AI‑Era Construction | The Role of Drawings
 date: 2026-02-03
 tags: [BIM, AI, Construction, DigitalConstruction, ConstructionTech, Robotics, AEC]
 excerpt: BIM is becoming the standard, yet we still end with 2D drawings. In an AI-and-robotics future, should drawings remain the core deliverable—or should models become the language of construction?
