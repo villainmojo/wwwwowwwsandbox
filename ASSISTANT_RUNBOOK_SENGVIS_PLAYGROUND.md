@@ -64,6 +64,21 @@ Implementation notes:
 - Section: `.bento-item.blog-feature` (wide featured card)
 - Blog link: `/blog/` (opens in new tab)
 
+### 4.2 Blog UX updates
+User directive (2026-02-03):
+- Add link from blog pages to **main homepage** (right side top nav).
+- Add pagination when post count exceeds **12**.
+
+Implementation notes:
+- Added `메인` link in blog top nav (`.nav-home`) for:
+  - `/blog/` index
+  - `/blog/<id>/` post pages (template)
+  - `/blog/about/`, `/blog/privacy/`, `/blog/contact/`
+- Pagination implemented in `/blog/assets/blog.js`:
+  - `perPage=12`
+  - uses query param `?page=N`
+  - works alongside tag filters (`?tag=...`) and search
+
 ## 5) Operating directive (user)
 User directive (2026-02-03):
 - Assistant should **deploy proactively** after making changes, and keep an on-disk runbook of decisions.

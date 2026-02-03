@@ -109,8 +109,12 @@ function trackPage(){
 async function pageIndex(){
   document.title = `자유 실험실 | 부업·AI·봇·자동화·취미`;
   const grid = qs('#grid')
+  const pager = qs('#pager')
   const search = qs('#search')
-  const tag = new URLSearchParams(location.search).get('tag')
+
+  const params = new URLSearchParams(location.search)
+  const tag = params.get('tag')
+  const perPage = 12
 
   const index = await loadIndex()
   let posts = index.posts || []
@@ -123,18 +127,99 @@ async function pageIndex(){
     qs('#heroSubtitle').textContent = `#${tag} 태그 글 목록 (${posts.length})`
   }
 
+  function getPage(){
+    const p = parseInt(new URLSearchParams(location.search).get('page') || '1', 10)
+    return Number.isFinite(p) && p > 0 ? p : 1
+  }
+
+  function setPage(nextPage){
+    const sp = new URLSearchParams(location.search)
+    if(nextPage <= 1) sp.delete('page')
+    else sp.set('page', String(nextPage))
+    const nextUrl = `${location.pathname}?${sp.toString()}`
+    history.replaceState({}, '', nextUrl)
+  }
+
+  function renderPager(total, page, q){
+    if(!pager) return
+    const totalPages = Math.max(1, Math.ceil(total / perPage))
+    if(totalPages <= 1){ pager.innerHTML = ''; return }
+
+    // show up to 7 page links with ellipsis
+    const mk = (p, label=p, active=false) => {
+      const sp = new URLSearchParams(location.search)
+      if(p <= 1) sp.delete('page')
+      else sp.set('page', String(p))
+      const href = `${location.pathname}?${sp.toString()}`
+      return `<a href="${href}" class="${active ? 'active' : ''}" data-page="${p}">${label}</a>`
+    }
+
+    const parts = []
+    const clamp = (x)=>Math.max(1, Math.min(totalPages, x))
+    page = clamp(page)
+
+    if(page > 1) parts.push(mk(page-1, '←'))
+
+    const windowSize = 7
+    let start = Math.max(1, page - Math.floor(windowSize/2))
+    let end = Math.min(totalPages, start + windowSize - 1)
+    start = Math.max(1, end - windowSize + 1)
+
+    if(start > 1){
+      parts.push(mk(1, '1', page===1))
+      if(start > 2) parts.push('<span class="sep">…</span>')
+    }
+
+    for(let p=start; p<=end; p++) parts.push(mk(p, String(p), p===page))
+
+    if(end < totalPages){
+      if(end < totalPages - 1) parts.push('<span class="sep">…</span>')
+      parts.push(mk(totalPages, String(totalPages), page===totalPages))
+    }
+
+    if(page < totalPages) parts.push(mk(page+1, '→'))
+
+    pager.innerHTML = parts.join('')
+
+    // handle clicks to avoid full reload if desired
+    pager.querySelectorAll('a[data-page]').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        e.preventDefault()
+        const next = parseInt(a.getAttribute('data-page'), 10)
+        if(!next) return
+        setPage(next)
+        applyFilter() // rerender
+        window.scrollTo({top: 0, behavior:'smooth'})
+      })
+    })
+  }
+
   function applyFilter(){
     const q = (search.value||'').trim().toLowerCase()
-    const filtered = !q ? posts : posts.filter(p => {
+    let filtered = !q ? posts : posts.filter(p => {
       const hay = [p.title, p.excerpt, normalizeTags(p.tags).join(' ')].join(' ').toLowerCase()
       return hay.includes(q)
     })
+
+    const total = filtered.length
+    const totalPages = Math.max(1, Math.ceil(total / perPage))
+    let page = getPage()
+    if(page > totalPages){ page = totalPages; setPage(page) }
+
+    const start = (page-1) * perPage
+    const pageItems = filtered.slice(start, start + perPage)
+
     grid.innerHTML=''
-    filtered.forEach(p=>grid.appendChild(renderCard(p)))
-    qs('#count').textContent = `${filtered.length}개 글`
+    pageItems.forEach(p=>grid.appendChild(renderCard(p)))
+
+    const pageSuffix = totalPages > 1 ? ` · ${page}/${totalPages}p` : ''
+    qs('#count').textContent = `${total}개 글${pageSuffix}`
+
+    renderPager(total, page, q)
   }
 
-  search.addEventListener('input', applyFilter)
+  // when searching, go back to page 1
+  search.addEventListener('input', ()=>{ setPage(1); applyFilter() })
   applyFilter()
   trackPage()
 }

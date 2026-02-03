@@ -28,6 +28,8 @@ html,body{
 .nav{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
 .nav a{color:var(--muted); text-decoration:none; font-size:13px; padding:6px 10px; border:1px solid transparent; border-radius:999px; background:transparent;}
 .nav a:hover{border-color:var(--border); color:var(--text); background:rgba(255,255,255,.7)}
+.nav a.nav-home{color:#fff; font-weight:900; background:linear-gradient(135deg, var(--accent), var(--accent2)); border-color: transparent;}
+.nav a.nav-home:hover{filter:brightness(1.02);}
 
 .hero{padding:18px 18px 10px; border:1px solid var(--border); background:linear-gradient(135deg, rgba(255,255,255,.92), rgba(255,255,255,.65)); border-radius:18px; margin-bottom:18px; box-shadow: 0 12px 30px rgba(15,23,42,.06);}
 .hero h1{margin:0 0 6px; font-size:26px;}
@@ -143,6 +145,12 @@ html,body{
   .comment .col.actions{grid-column: 1 / -1; justify-content:flex-start;}
   .comment-form input{flex:1; min-width:160px;}
 }
+
+.pager{display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:16px;}
+.pager a{font-size:12px; padding:8px 12px; border-radius:999px; border:1px solid var(--border); background:rgba(255,255,255,.82); color:var(--muted); text-decoration:none;}
+.pager a:hover{border-color:rgba(124,58,237,.28); color:var(--text)}
+.pager a.active{background:rgba(124,58,237,.12); border-color:rgba(124,58,237,.25); color:var(--accent); font-weight:900;}
+.pager .sep{color:rgba(71,85,105,.55); padding:0 2px;}
 
 .footer{margin-top:22px; color:var(--muted); font-size:12px;}
 .notice{border:1px dashed rgba(15,23,42,.18); padding:12px; border-radius:12px; color:var(--muted); font-size:12px; background:rgba(255,255,255,.65)}
