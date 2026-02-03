@@ -155,9 +155,10 @@
 
     ;(async ()=>{
       try{
-        const THREE = await import('/vendor/three/build/three.module.js');
-        const { OrbitControls } = await import('/vendor/three/examples/jsm/controls/OrbitControls.js');
-        const CANNON = await import('/vendor/cannon-es/dist/cannon-es.js');
+        const THREE = await import('/vendor/three/build/three.module.js?v=5');
+        // OrbitControls is optional and may trigger bare-import issues in some caches.
+        // We don't need it for gameplay, so it's intentionally not imported.
+        const CANNON = await import('/vendor/cannon-es/dist/cannon-es.js?v=5');
 
         // -------------------------
         // Helpers
@@ -186,9 +187,8 @@
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1200);
     camera.position.set(0, 6, 12);
 
-    // Optional controls for debugging (disabled by default)
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enabled = false;
+    // Optional orbit controls removed (gameplay doesn't need them)
+    const controls = null;
 
     // Lights
     const hemi = new THREE.HemisphereLight(0xffffff, 0x1b1b2a, 0.55);
