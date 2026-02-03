@@ -55,7 +55,13 @@ Implementation notes:
 - Section: `.bento-item.blog-feature` (wide featured card)
 - Blog link: `/blog/` (opens in new tab)
 
-## 5) Recent changes log (short)
+## 5) Operating directive (user)
+User directive (2026-02-03):
+- Assistant should **deploy proactively** after making changes, and keep an on-disk runbook of decisions.
+- When user asks to “check local files later”, read this runbook first.
+
+## 6) Recent changes log (short)
 - 2026-02-03: Added `/v2home/` folder route + updated V1 links to point to `/v2home/`.
 - 2026-02-03: Added emphasized Blog button in V2 top nav + featured Blog card in services grid.
 - 2026-02-03: Deployed to `/var/www/sengvis-playground` via `deploy.sh`.
+- 2026-02-03: New blog post: `ai-homepage-blog-with-ai` + updated `blog/posts/index.json`.

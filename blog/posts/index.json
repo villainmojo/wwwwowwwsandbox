@@ -1,6 +1,23 @@
 {
   "posts": [
     {
+      "id": 10,
+      "slug": "ai-homepage-blog-with-ai",
+      "title": "AI로 홈페이지·블로그 만들기 (V1/V2, 배포까지) — 오늘의 실험 기록",
+      "date": "2026-02-03",
+      "excerpt": "AI를 ‘코딩 도구’가 아니라 ‘운영 파트너’로 써서 홈페이지(V1/V2)와 블로그를 만들고, /v2home 라우팅·배포·캐시 이슈까지 해결한 하루의 기록.",
+      "thumbnail": "/blog/posts/thumbs/ai-homepage-blog-with-ai.svg",
+      "tags": [
+        "AI",
+        "블로그",
+        "홈페이지",
+        "자동화",
+        "배포",
+        "Cloudflare",
+        "Moltbot"
+      ]
+    },
+    {
       "id": 9,
       "slug": "ai-bot-dwg-comment-workflow",
       "title": "PDF 코멘트로 DWG 도면을 자동 수정해본 실험(서버 로그만으로)",
