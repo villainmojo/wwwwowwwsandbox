@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>AI로 홈페이지·블로그 만들기 (V1/V2, 배포까지) — 오늘의 실험 기록 · 자유 실험실 | 부업·AI·봇·자동화·취미</title>
+  <meta name="description" content="AI를 ‘코딩 도구’가 아니라 ‘운영 파트너’로 써서 홈페이지(V1/V2)와 블로그를 만들고, /v2home 라우팅·배포·캐시 이슈까지 해결한 하루의 기록." />
+  <link rel="canonical" href="https://www.bimarchi-pg.com/blog/10/" />
+
+  <!-- OpenGraph / Social -->
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="자유 실험실" />
+  <meta property="og:title" content="AI로 홈페이지·블로그 만들기 (V1/V2, 배포까지) — 오늘의 실험 기록" />
+  <meta property="og:description" content="AI를 ‘코딩 도구’가 아니라 ‘운영 파트너’로 써서 홈페이지(V1/V2)와 블로그를 만들고, /v2home 라우팅·배포·캐시 이슈까지 해결한 하루의 기록." />
+  <meta property="og:url" content="https://www.bimarchi-pg.com/blog/10/" />
+  <meta property="og:image" content="https://www.bimarchi-pg.com/blog/posts/thumbs/ai-homepage-blog-with-ai.svg" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AI로 홈페이지·블로그 만들기 (V1/V2, 배포까지) — 오늘의 실험 기록" />
+  <meta name="twitter:description" content="AI를 ‘코딩 도구’가 아니라 ‘운영 파트너’로 써서 홈페이지(V1/V2)와 블로그를 만들고, /v2home 라우팅·배포·캐시 이슈까지 해결한 하루의 기록." />
+  <meta name="twitter:image" content="https://www.bimarchi-pg.com/blog/posts/thumbs/ai-homepage-blog-with-ai.svg" />
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/blog/assets/blog.css" />
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml" />
+  <meta name="robots" content="index,follow" />
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand"><a href="/blog/">자유 실험실 | 부업·AI·봇·자동화·취미</a></div>
+      <nav class="nav">
+        <a href="/blog/">목록</a>
+        <a href="/blog/about/">소개</a>
+        <a href="/blog/privacy/">개인정보처리방침</a>
+        <a href="/blog/contact/">문의</a>
+      </nav>
+    </div>
+
+    <article class="post" id="post">
+      <h1 id="title">-</h1>
+      <div class="meta"><span id="date"></span></div>
+      <div class="tags" id="tags"></div>
+      <div class="prose" id="content"></div>
+
+      <section class="extras" id="extras" style="display:none">
+        <div class="navrow" id="navRow" style="display:none">
+          <a class="navlink prev" id="prevLink" href="#" style="display:none">
+            <span class="cap">작가의 이전글</span>
+            <span class="ttl"></span>
+          </a>
+          <a class="navlink next" id="nextLink" href="#" style="display:none">
+            <span class="cap">작가의 다음글</span>
+            <span class="ttl"></span>
+          </a>
+        </div>
+
+        <div class="recobox" id="recoBox" style="display:none">
+          <div class="reco-title">추천 글</div>
+          <div class="reco-grid" id="related"></div>
+        </div>
+      </section>
+    </article>
+
+    <section class="comments" id="comments">
+      <h3>댓글</h3>
+      <div class="comment-list" id="commentList"></div>
+      <div class="comment-form">
+        <div class="row">
+          <input id="cName" placeholder="이름" maxlength="20" />
+          <input id="cPw" placeholder="비밀번호" type="password" maxlength="32" />
+        </div>
+        <div class="row row-wide">
+          <textarea id="cBody" placeholder="댓글을 남겨주세요" maxlength="1000"></textarea>
+        </div>
+        <div class="submit">
+          <button class="cbtn primary" id="cSubmit">댓글 등록</button>
+          <span class="hint" id="cStatus"></span>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">© <span id="year"></span> 자유 실험실 | 부업·AI·봇·자동화·취미</div>
+  </div>
+
+  <script defer src="/blog/assets/marked.min.js"></script>
+  <script defer src="/blog/assets/blog.js"></script>
+  <script>
+    // wait for deferred scripts (marked/blog.js) and DOM
+    window.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('year').textContent = new Date().getFullYear();
+      // track page view (server logs)
+      try{ fetch(`/api/track?p=${encodeURIComponent(location.pathname)}`, {method:'GET', keepalive:true}).catch(()=>{}) }catch{}
+
+      const waitFor = (fn, timeoutMs=5000) => new Promise((resolve, reject)=>{
+        const started = Date.now();
+        (function tick(){
+          try{ if(fn()) return resolve(true) }catch(e){}
+          if(Date.now()-started > timeoutMs) return reject(new Error('timeout'))
+          setTimeout(tick, 30)
+        })()
+      })
+
+      function setCStatus(msg){
+        const el = document.getElementById('cStatus');
+        if(el) el.textContent = msg || '';
+      }
+
+      function escapeText(s){
+        return String(s||'')
+          .replace(/&/g,'&amp;')
+          .replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;')
+          .replace(/\"/g,'&quot;')
+          .replace(/'/g,'&#39;');
+      }
+
+      async function isAdmin(){
+        const token = localStorage.getItem('adminToken');
+        if(!token) return false;
+        try{
+          const res = await fetch('/api/admin/verify', { headers: { 'Authorization': `Bearer ${token}` } });
+          const data = await res.json();
+          return !!data.success;
+        }catch{ return false }
+      }
+
+      async function renderComments(postId){
+        const listEl = document.getElementById('commentList');
+        listEl.innerHTML = '<div class="notice">불러오는 중…</div>';
+        const admin = await isAdmin();
+        try{
+          const res = await fetch('/api/blog/comments?postId='+encodeURIComponent(String(postId)));
+          const data = await res.json();
+          const items = data.comments || [];
+          if(!items.length){
+            listEl.innerHTML = '<div class="notice">댓글이 없습니다. 첫 댓글을 남겨보세요.</div>';
+            return;
+          }
+          listEl.innerHTML='';
+          items.forEach(c=>{
+            const el = document.createElement('div');
+            el.className='comment';
+            el.innerHTML = `
+              <div class="rowline">
+                <div class="col name">${escapeText(c.name)}</div>
+                <div class="col body">${c.content||''}</div>
+                <div class="col time">${(c.updatedAt ? '수정 ' : '')}${(c.createdAt||'').slice(0,16).replace('T',' ')}</div>
+                <div class="col actions">
+                  <button class="cbtn" data-act="edit">수정</button>
+                  <button class="cbtn danger" data-act="del">삭제</button>
+                </div>
+              </div>
+            `;
+            el.querySelector('[data-act="edit"]').onclick = async ()=>{
+              const next = prompt('수정할 내용을 입력하세요', (c.content||'').replace(/<br\s*\/?\s*>/gi,'\n'));
+              if(next===null) return;
+              let pw = '';
+              const token = localStorage.getItem('adminToken');
+              if(!admin){ pw = prompt('비밀번호를 입력하세요'); if(pw===null) return; }
+              try{
+                const headers = { 'Content-Type':'application/json' };
+                if(admin && token) headers['Authorization'] = `Bearer ${token}`;
+                const r = await fetch('/api/blog/comments/edit', { method:'POST', headers, body: JSON.stringify({postId, commentId:c.id, password: pw||'', content: next}) });
+                const d = await r.json();
+                if(!d.success) throw new Error(d.error||'fail');
+                await renderComments(postId);
+              }catch(e){ alert('수정 실패: '+e.message) }
+            };
+            el.querySelector('[data-act="del"]').onclick = async ()=>{
+              if(!confirm('이 댓글을 삭제할까요?')) return;
+              let pw = '';
+              const token = localStorage.getItem('adminToken');
+              if(!admin){ pw = prompt('비밀번호를 입력하세요'); if(pw===null) return; }
+              try{
+                const headers = { 'Content-Type':'application/json' };
+                if(admin && token) headers['Authorization'] = `Bearer ${token}`;
+                const r = await fetch('/api/blog/comments/delete', { method:'POST', headers, body: JSON.stringify({postId, commentId:c.id, password: pw||''}) });
+                const d = await r.json();
+                if(!d.success) throw new Error(d.error||'fail');
+                await renderComments(postId);
+              }catch(e){ alert('삭제 실패: '+e.message) }
+            };
+            listEl.appendChild(el);
+          })
+        }catch(e){
+          listEl.innerHTML = '<div class="notice">댓글을 불러오지 못했습니다.</div>';
+        }
+      }
+
+      async function submitComment(postId){
+        const name = (document.getElementById('cName').value||'').trim();
+        const password = (document.getElementById('cPw').value||'').trim();
+        const content = (document.getElementById('cBody').value||'').trim();
+        if(!name || !password || !content){ setCStatus('이름/비밀번호/내용을 입력하세요.'); return; }
+        setCStatus('등록 중…');
+        try{
+          const r = await fetch('/api/blog/comments', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({postId, name, password, content}) });
+          const d = await r.json();
+          if(!d.success) throw new Error(d.error||'fail');
+          document.getElementById('cBody').value='';
+          setCStatus('등록 완료');
+          await renderComments(postId);
+        }catch(e){ setCStatus('등록 실패: '+e.message) }
+      }
+
+      ;(async ()=>{
+        const slug = 'ai-homepage-blog-with-ai';
+        const res = await fetch(`/blog/posts/${slug}.md`);
+        if(!res.ok){ document.getElementById('post').innerHTML = '<div class="notice">글을 불러오지 못했습니다.</div>'; return; }
+        const md = await res.text();
+
+        // frontmatter parse
+        function parseFrontmatter(md){
+          if(!md.startsWith('---')) return {meta:{}, body: md}
+          const end = md.indexOf('\n---', 3)
+          if(end === -1) return {meta:{}, body: md}
+          const fm = md.slice(3, end).trim()
+          const body = md.slice(end + 4).trimStart()
+          const meta = {}
+          fm.split('\n').forEach(line=>{
+            const idx=line.indexOf(':')
+            if(idx===-1) return
+            const k=line.slice(0,idx).trim()
+            const v=line.slice(idx+1).trim()
+            if(v.startsWith('[') && v.endsWith(']')) meta[k]=v.slice(1,-1).split(',').map(s=>s.trim()).filter(Boolean)
+            else meta[k]=v
+          })
+          return {meta, body}
+        }
+        function fmtDate(iso){
+          try{ return new Date(iso).toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}) }catch{ return iso }
+        }
+        function normalizeTags(tags){
+          if(!tags) return []
+          if(Array.isArray(tags)) return tags
+          return String(tags).split(',').map(s=>s.trim()).filter(Boolean)
+        }
+
+        const {meta, body} = parseFrontmatter(md);
+        const title = meta.title || slug;
+        const date = meta.date ? fmtDate(meta.date) : '';
+        const tags = normalizeTags(meta.tags);
+
+        document.getElementById('title').textContent = title;
+        document.getElementById('date').textContent = date;
+        document.title = `${title} · 자유 실험실 | 부업·AI·봇·자동화·취미`;
+        document.getElementById('tags').innerHTML = tags.map(t=>`<a class="tag" href="/blog/?tag=${encodeURIComponent(t)}">#${t}</a>`).join('');
+
+        await waitFor(()=>window.marked && typeof window.marked.parse === 'function');
+        document.getElementById('content').innerHTML = window.marked.parse(body, {mangle:false, headerIds:false});
+        document.querySelectorAll('#content img').forEach(img=>{ img.loading = 'lazy'; img.decoding = 'async' });
+
+        try{
+          const idxRes = await fetch('/blog/posts/index.json');
+          if(idxRes.ok){
+            const data = await idxRes.json();
+            const posts = data.posts || [];
+            const i = posts.findIndex(p=>String(p.slug)===String(slug));
+
+            // comments (postId)
+            const postId = (i >= 0 && posts[i]) ? posts[i].id : null;
+            if(postId){
+              document.getElementById('cSubmit').onclick = ()=>submitComment(postId);
+              renderComments(postId);
+            }
+
+            const newer = i>0 ? posts[i-1] : null;
+            const older = (i>=0 && i<posts.length-1) ? posts[i+1] : null;
+
+            const extras = document.getElementById('extras');
+            const navRow = document.getElementById('navRow');
+            const prevA = document.getElementById('prevLink');
+            const nextA = document.getElementById('nextLink');
+
+            if(newer){
+              nextA.style.display='';
+              nextA.href = `/blog/${encodeURIComponent(String(newer.id))}/`;
+              nextA.querySelector('.ttl').textContent = newer.title;
+            }
+            if(older){
+              prevA.style.display='';
+              prevA.href = `/blog/${encodeURIComponent(String(older.id))}/`;
+              prevA.querySelector('.ttl').textContent = older.title;
+            }
+            if(newer || older){
+              extras.style.display='';
+              navRow.style.display='';
+            }
+
+            const rel = document.getElementById('related');
+            const recoBox = document.getElementById('recoBox');
+            if(tags.length){
+              const tagSet = new Set(tags.map(t=>String(t).toLowerCase()));
+              const related = posts
+                .filter(p=>String(p.slug)!==String(slug))
+                .map(p=>({
+                  p,
+                  score: normalizeTags(p.tags).reduce((acc,t)=>acc + (tagSet.has(String(t).toLowerCase()) ? 1 : 0), 0)
+                }))
+                .filter(x=>x.score>0)
+                .sort((a,b)=>b.score-a.score)
+                .slice(0, 6)
+                .map(x=>x.p);
+
+              if(related.length){
+                extras.style.display='';
+                recoBox.style.display='';
+                const cards = related.map(p=>{
+                  const url = `/blog/${encodeURIComponent(String(p.id))}/`;
+                  const thumb = p.thumbnail ? `<div class="rt"><img alt="" loading="lazy" decoding="async" src="${p.thumbnail}"></div>` : `<div class="rt"></div>`;
+                  return `
+                    <a class="reco-card" href="${url}">
+                      ${thumb}
+                      <div class="rb">
+                        <div class="t">${p.title}</div>
+                        <div class="m">${(p.date||'').slice(0,10)}</div>
+                      </div>
+                    </a>`
+                }).join('');
+                rel.innerHTML = cards;
+              }
+            }
+          }
+        }catch(e){ /* ignore */ }
+
+      })().catch(err=>{
+        console.error(err);
+        document.getElementById('content').innerHTML = '<div class="notice">글 렌더링 중 오류가 발생했습니다.</div>'
+      });
+
+    });
+  </script>
+</body>
+</html>
