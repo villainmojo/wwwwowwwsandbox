@@ -104,6 +104,37 @@
     </div>
   </div>
 
+  <script>
+    // Start button fallback: works even if module imports fail.
+    window.__DRIFT_READY = false;
+    window.__DRIFT_START_REQUESTED = false;
+    window.__DRIFT_START = null;
+
+    const _overlay = document.getElementById('overlay');
+    const _btn = document.getElementById('startBtn');
+
+    function requestStart(){
+      window.__DRIFT_START_REQUESTED = true;
+      // Hide overlay immediately for responsiveness
+      if(_overlay) _overlay.style.display = 'none';
+
+      // If module has attached a start function, call it.
+      if(typeof window.__DRIFT_START === 'function'){
+        try{ window.__DRIFT_START(); }catch(e){}
+        return;
+      }
+
+      // If not ready within a moment, show a helpful error.
+      setTimeout(()=>{
+        if(!window.__DRIFT_READY){
+          alert('게임 로딩이 실패했어요.\n\n가능한 원인:\n- 브라우저에서 외부 모듈(unpkg.com) 차단\n- 콘솔에 모듈 로딩 에러\n\n해결: 시크릿 창/다른 브라우저로 테스트하거나, 네트워크 제한 없는 환경에서 다시 시도해보세요.');
+        }
+      }, 1200);
+    }
+
+    if(_btn) _btn.addEventListener('click', requestStart);
+  </script>
+
   <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
     import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
@@ -477,13 +508,19 @@
     // Start / pointer lock
     // -------------------------
     let running = false;
-    hud.startBtn.addEventListener('click', async ()=>{
+
+    async function startGame(){
       hud.overlay.style.display = 'none';
       running = true;
-      try{
-        await renderer.domElement.requestPointerLock?.();
-      }catch{}
-    });
+      try{ await renderer.domElement.requestPointerLock?.(); }catch{}
+    }
+
+    // expose to non-module start handler
+    window.__DRIFT_READY = true;
+    window.__DRIFT_START = startGame;
+    if(window.__DRIFT_START_REQUESTED){
+      startGame();
+    }
 
     // -------------------------
     // Main loop
